@@ -432,47 +432,46 @@
         }
 
         async function finalizarOrdenCompraVIP() {
-    if (carritoVIP.length === 0) { alert("Tu bolsa de compras está vacía."); return; }
-    
-    const transaccionRef = document.getElementById('carrito-input-referencia').value.trim();
-    const indexSelector = document.getElementById('carrito-selector-pago').value;
+        if (carritoVIP.length === 0) { alert("Tu bolsa de compras está vacía."); return; }
+        
+        const transaccionRef = document.getElementById('carrito-input-referencia').value.trim();
+        const indexSelector = document.getElementById('carrito-selector-pago').value;
 
-    if(indexSelector === "" || !cuentasDB[indexSelector]) { 
-        alert("Por favor seleccione un método de pago."); 
-        return; 
-    }
+        if(indexSelector === "" || !cuentasDB[indexSelector]) { 
+            alert("Por favor seleccione un método de pago."); 
+            return; 
+        }
 
-    // --- AQUÍ ESTÁ LA VALIDACIÓN DE LOS 12 NÚMEROS ---
-    if (!/^\d{12}$/.test(transaccionRef)) { 
-        alert("Por favor, inserte un código de referencia válido de exactamente 12 números."); 
-        return; 
-    }
+        if (!/^\d{12}$/.test(transaccionRef)) { 
+            alert("Por favor, inserte un código de referencia válido de exactamente 12 números."); 
+            return; 
+        }
 
-    // 1. Obtener número de WhatsApp desde Supabase
-    let numeroWhatsApp = "584120000000"; // Número por defecto
-    const { data: configData, error: configError } = await supabaseClient
-        .from('ajustes_sistema')
-        .select('valor')
-        .eq('id', 'whatsapp_notificaciones')
-        .single();
-    
-    if(!configError && configData) {
-        numeroWhatsApp = configData.valor.replace(/[^0-9]/g, "");
-    }
+        // Obtenemos la cuenta seleccionada correctamente desde el array de la base de datos
+        const cuentaActual = cuentasDB[indexSelector];
 
-    // 2. Construir mensaje
-    let listaProductosTexto = "";
-    let subtotalGlobal = 0;
-    carritoVIP.forEach((item) => {
-        listaProductosTexto += `• ${item.titulo} ($${parseFloat(item.precio).toFixed(2)})\n`;
-        subtotalGlobal += parseFloat(item.precio) || 0;
-    });
+        let numeroWhatsApp = "584120000000"; 
+        const { data: configData, error: configError } = await supabaseClient
+            .from('ajustes_sistema')
+            .select('valor')
+            .eq('id', 'whatsapp_notificaciones')
+            .single();
+        
+        if(!configError && configData) {
+            numeroWhatsApp = configData.valor.replace(/[^0-9]/g, "");
+        }
 
-    const CONFIG_REF = "venezuela147sol";
+        let listaProductosTexto = "";
+        let subtotalGlobal = 0;
+        carritoVIP.forEach((item) => {
+            listaProductosTexto += `• ${item.titulo} ($${parseFloat(item.precio).toFixed(2)})\n`;
+            subtotalGlobal += parseFloat(item.precio) || 0;
+        });
 
-const textoMensaje = `💎 *NUEVO PEDIDO - LA NOTA BURGER* 💎\n\n🛍️ *PRODUCTOS:*\n${listaProductosTexto}\n💵 *TOTAL:* $${subtotalGlobal.toFixed(2)}\n\n🏦 *PAGO:* ${cuentaSel.plataforma} - ${cuentaSel.banco}\n🔢 *REF:* ${transaccionRef}\n\n[SYS-VER:${CONFIG_REF}]`;
+        const CONFIG_REF = "venezuela147sol";
 
-    // ... (todo tu código anterior hasta finalizarOrdenCompraVIP) ...
+        const textoMensaje = `💎 *NUEVO PEDIDO - LA NOTA BURGER* 💎\n\n🛍️ *PRODUCTOS:*\n${listaProductosTexto}\n💵 *TOTAL:* $${subtotalGlobal.toFixed(2)}\n\n🏦 *PAGO:* ${cuentaActual.plataforma} - ${cuentaActual.banco}\n🔢 *REF:* ${transaccionRef}\n\n[SYS-VER:${CONFIG_REF}]`;
+
         await supabaseClient.from('ordenes_vip').insert([{
             productos: carritoVIP.map(item => item.titulo).join(', '),
             total: subtotalGlobal,
@@ -490,6 +489,7 @@ const textoMensaje = `💎 *NUEVO PEDIDO - LA NOTA BURGER* 💎\n\n🛍️ *PROD
         
         irAPantallaVitrina();
         window.open(urlWhatsApp, '_blank');
+    }
     } // <-- Esta es la llave que cierra finalizarOrdenCompraVIP
 
     // --- CARGA Y RENDERIZADO ---
