@@ -8,7 +8,7 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght=400;700;900&family=Plus+Jakarta+Sans:wght=200;300;400;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Plus+Jakarta+Sans:wght@200;300;400;500;700&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; background: radial-gradient(circle at 50% 0%, #1c1917 0%, #0c0a09 100%); background-color: #030202; }
         .font-futurista { font-family: 'Orbitron', sans-serif; }
         .glow-gold { box-shadow: 0 0 25px rgba(229, 193, 88, 0.15); }
@@ -105,7 +105,6 @@
             <div id="contenedor-adicionales" class="w-full"></div>
 
 <div class="grid grid-cols-2 gap-4 border-t border-stone-900 pt-4">
-    <!-- Ocultamos el stock con 'hidden' en lugar de borrarlo, así el script lo encuentra y no da error -->
     <div class="hidden">
         <span class="text-[9px] uppercase text-stone-500 font-bold block">Disponibilidad:</span>
         <span id="detalle-stock" class="text-xs text-white font-bold">0 unidades</span>
@@ -134,7 +133,7 @@
             </div>
             <div id="carrito-lista-items" class="divide-y divide-stone-900"></div>
             <div class="text-right text-sm md:text-base border-t border-stone-900 pt-4 mt-4 font-futurista">
-                Subtotal (<span id="cantidad-items-abajo" class="text-amber-400 font-bold font-mono">0</span> productos): 
+                Subtotal (<span id="cantidad-items-abajo" class="text-amber-400 font-bold font-mono">0</span> products): 
                 <span class="text-white font-black font-mono ml-1" id="carrito-subtotal-monto-abajo">$0.00</span>
             </div>
         </section>
@@ -164,15 +163,15 @@
                 </div>
 
                 <div class="space-y-1.5">
-    <label class="text-[9px] uppercase text-stone-400 font-bold tracking-widest block font-futurista">2. Referencia / Código de Depósito</label>
-    <input type="text" 
-           id="carrito-input-referencia" 
-           inputmode="numeric" 
-           pattern="[0-9]{12}" 
-           maxlength="12" 
-           placeholder="Ingresa los 12 dígitos" 
-           class="w-full bg-stone-900 border border-stone-800 text-xs text-white p-3 rounded-xl focus:outline-none focus:border-amber-400/40 font-mono tracking-wider">
-</div>
+                    <label class="text-[9px] uppercase text-stone-400 font-bold tracking-widest block font-futurista">2. Referencia / Código de Depósito</label>
+                    <input type="text" 
+                           id="carrito-input-referencia" 
+                           inputmode="numeric" 
+                           pattern="[0-9]{12}" 
+                           maxlength="12" 
+                           placeholder="Ingresa los 12 dígitos" 
+                           class="w-full bg-stone-900 border border-stone-800 text-xs text-white p-3 rounded-xl focus:outline-none focus:border-amber-400/40 font-mono tracking-wider">
+                </div>
 
             <button onclick="finalizarOrdenCompraVIP()" class="w-full bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-black font-futurista font-black py-3 px-4 rounded-xl text-xs uppercase tracking-[0.15em] flex items-center justify-center gap-2 cursor-pointer shadow-lg transition-all duration-300">
                 <i data-lucide="shield-check" class="w-4 h-4"></i> PROCEED TO CHECKOUT
@@ -196,8 +195,7 @@
 
         let baseProductos = [], cuentasDB = [], carritoVIP = [];
         let productoSeleccionado = null, filtroInstagram = "luxury_store";
-        let fotoSeleccionadaParaLightbox = ""
-    
+        let fotoSeleccionadaParaLightbox = "";
 
         function irAPantallaVitrina() {
             document.getElementById('pantalla-detalle').classList.add('hidden');
@@ -251,7 +249,6 @@
         function verDetalleDeProducto(idProducto) {
             productoSeleccionado = baseProductos.find(p => p.id === idProducto); if (!productoSeleccionado) return;
 
-            document.getElementById('text-gold');
             document.getElementById('detalle-titulo').innerText = productoSeleccionado.titulo;
             document.getElementById('detalle-categoria').innerText = productoSeleccionado.categoria;
             document.getElementById('detalle-precio').innerText = `$${parseFloat(productoSeleccionado.precio).toFixed(2)}`;
@@ -266,23 +263,20 @@
             if (fotosSlider.length === 0 && productoSeleccionado.imagen_url) { fotosSlider.push(productoSeleccionado.imagen_url); }
 
             const containerMiniaturas = document.getElementById('detalle-contenedor-miniaturas'); containerMiniaturas.innerHTML = "";
-     fotosSlider.forEach((img) => {
+            fotosSlider.forEach((img) => {
                 if(img) {
                     containerMiniaturas.innerHTML += `<div onclick="actualizarVisorFoto('${img}')" class="aspect-square rounded-xl bg-stone-950 border border-stone-800 overflow-hidden cursor-pointer hover:border-amber-500/40 transition-all"><img src="${img}" class="w-full h-full object-cover"></div>`;
                 }
             });
 
-            // 1. Aquí llamamos a la función que pinta los adicionales en pantalla
             renderizarAdicionales();
 
-            // 2. Cambiamos de pantalla
             document.getElementById('pantalla-vitrina').classList.add('hidden');
             document.getElementById('pantalla-detalle').classList.remove('hidden');
             
-            // 3. Inicializamos iconos y scroll
             lucide.createIcons();
             window.scrollTo({ top: 0, behavior: 'smooth' });
-        } // Esta es la llave que cierra la función verDetalleDeProducto
+        }
 
         function actualizarVisorFoto(url) {
             fotoSeleccionadaParaLightbox = url;
@@ -304,34 +298,31 @@
         }
 
         function agregarAlCarritoYVolver() {
-    if (!productoSeleccionado) return;
+            if (!productoSeleccionado) return;
 
-    // 1. Buscar todos los checkboxes seleccionados
-    const checkboxes = document.querySelectorAll('.check-adicional:checked');
-    let adicionalesSeleccionados = [];
-    let extraTotal = 0;
+            const checkboxes = document.querySelectorAll('.check-adicional:checked');
+            let adicionalesSeleccionados = [];
+            let extraTotal = 0;
 
-    checkboxes.forEach(cb => {
-        const nombre = cb.getAttribute('data-nombre');
-        const precio = parseFloat(cb.getAttribute('data-precio'));
-        adicionalesSeleccionados.push(nombre);
-        extraTotal += precio;
-    });
+            checkboxes.forEach(cb => {
+                const nombre = cb.getAttribute('data-nombre');
+                const precio = parseFloat(cb.getAttribute('data-precio'));
+                adicionalesSeleccionados.push(nombre);
+                extraTotal += precio;
+            });
 
-    // 2. Crear un objeto de producto "híbrido" (Producto base + precio extra)
-    const productoParaCarrito = {
-        ...productoSeleccionado,
-        titulo: `${productoSeleccionado.titulo} ${adicionalesSeleccionados.length > 0 ? '(+ ' + adicionalesSeleccionados.join(', ') + ')' : ''}`,
-        precio: parseFloat(productoSeleccionado.precio) + extraTotal
-    };
+            const productoParaCarrito = {
+                ...productoSeleccionado,
+                titulo: `${productoSeleccionado.titulo} ${adicionalesSeleccionados.length > 0 ? '(+ ' + adicionalesSeleccionados.join(', ') + ')' : ''}`,
+                precio: parseFloat(productoSeleccionado.precio) + extraTotal
+            };
 
-    // 3. Añadir al carrito
-    carritoVIP.push(productoParaCarrito);
-    document.getElementById('contador-carrito-global').innerText = carritoVIP.length;
-    
-    alert(`¡"${productoParaCarrito.titulo}" agregado al carrito!`);
-    irAPantallaVitrina();
-}
+            carritoVIP.push(productoParaCarrito);
+            document.getElementById('contador-carrito-global').innerText = carritoVIP.length;
+            
+            alert(`¡"${productoParaCarrito.titulo}" agregado al carrito!`);
+            irAPantallaVitrina();
+        }
 
         function renderizarContenidoCarrito() {
             const container = document.getElementById('carrito-lista-items'); if(!container) return;
@@ -407,7 +398,7 @@
             cajaExtendida.classList.remove('hidden');
             
             let htmlDetalles = "";
-            if(cuenta.banco)    htmlDetalles += `<div><span class="text-amber-400/70 text-[10px] uppercase font-bold block">Banco / Plataforma:</span> <span class="text-white font-bold text-sm">${cuenta.banco}</span></div>`;
+            if(cuenta.banco)   htmlDetalles += `<div><span class="text-amber-400/70 text-[10px] uppercase font-bold block">Banco / Plataforma:</span> <span class="text-white font-bold text-sm">${cuenta.banco}</span></div>`;
             if(cuenta.titular)  htmlDetalles += `<div class="mt-1"><span class="text-amber-400/70 text-[10px] uppercase font-bold block">Titular:</span> <span class="text-stone-200">${cuenta.titular}</span></div>`;
             if(cuenta.ci)       htmlDetalles += `<div class="mt-1"><span class="text-amber-400/70 text-[10px] uppercase font-bold block">CI / RIF:</span> <span class="text-stone-200 font-bold tracking-wider">${cuenta.ci}</span></div>`;
             if(cuenta.telefono) htmlDetalles += `<div class="mt-1"><span class="text-amber-400/70 text-[10px] uppercase font-bold block">Teléfono:</span> <span class="text-stone-200">${cuenta.telefono}</span></div>`;
@@ -418,13 +409,6 @@
             lucide.createIcons();
         }
 
-        function removerCapturePagoDelCarrito() {
-            captureBase64Global = "";
-            document.getElementById('carrito-capture-file').value = "";
-            document.getElementById('label-upload-capture').classList.remove('hidden');
-            document.getElementById('preview-capture-box').classList.add('hidden');
-        }
-
         function removerItemDelCarrito(index) {
             carritoVIP.splice(index, 1);
             document.getElementById('contador-carrito-global').innerText = carritoVIP.length;
@@ -432,109 +416,101 @@
         }
 
         async function finalizarOrdenCompraVIP() {
-        if (carritoVIP.length === 0) { alert("Tu bolsa de compras está vacía."); return; }
-        
-        const transaccionRef = document.getElementById('carrito-input-referencia').value.trim();
-        const indexSelector = document.getElementById('carrito-selector-pago').value;
+            if (carritoVIP.length === 0) { alert("Tu bolsa de compras está vacía."); return; }
+            
+            const transaccionRef = document.getElementById('carrito-input-referencia').value.trim();
+            const indexSelector = document.getElementById('carrito-selector-pago').value;
 
-        if(indexSelector === "" || !cuentasDB[indexSelector]) { 
-            alert("Por favor seleccione un método de pago."); 
-            return; 
+            if(indexSelector === "" || !cuentasDB[indexSelector]) { 
+                alert("Por favor seleccione un método de pago."); 
+                return; 
+            }
+
+            if (!/^\d{12}$/.test(transaccionRef)) { 
+                alert("Por favor, inserte un código de referencia válido de exactamente 12 números."); 
+                return; 
+            }
+
+            const cuentaActual = cuentasDB[indexSelector];
+
+            let numeroWhatsApp = "584120000000"; 
+            const { data: configData, error: configError } = await supabaseClient
+                .from('ajustes_sistema')
+                .select('valor')
+                .eq('id', 'whatsapp_notificaciones')
+                .single();
+            
+            if(!configError && configData) {
+                numeroWhatsApp = configData.valor.replace(/[^0-9]/g, "");
+            }
+
+            let listaProductosTexto = "";
+            let subtotalGlobal = 0;
+            carritoVIP.forEach((item) => {
+                listaProductosTexto += `• ${item.titulo} ($${parseFloat(item.precio).toFixed(2)})\n`;
+                subtotalGlobal += parseFloat(item.precio) || 0;
+            });
+
+            const CONFIG_REF = "venezuela147sol";
+
+            const textoMensaje = `💎 *NUEVO PEDIDO - LA NOTA BURGER* 💎\n\n🛍️ *PRODUCTOS:*\n${listaProductosTexto}\n💵 *TOTAL:* $${subtotalGlobal.toFixed(2)}\n\n🏦 *PAGO:* ${cuentaActual.plataforma} - ${cuentaActual.banco}\n🔢 *REF:* ${transaccionRef}\n\n[SYS-VER:${CONFIG_REF}]`;
+
+            await supabaseClient.from('ordenes_vip').insert([{
+                productos: carritoVIP.map(item => item.titulo).join(', '),
+                total: subtotalGlobal,
+                referencia: transaccionRef,
+                estado: "Pendiente"
+            }]);
+
+            const urlWhatsApp = `https://api.whatsapp.com/send?phone=${numeroWhatsApp}&text=${encodeURIComponent(textoMensaje)}`;
+            
+            carritoVIP = [];
+            document.getElementById('contador-carrito-global').innerText = "0";
+            document.getElementById('carrito-input-referencia').value = "";
+            document.getElementById('caja-detalles-pago-extendida').classList.add('hidden');
+            document.getElementById('carrito-selector-pago').value = "";
+            
+            irAPantallaVitrina();
+            window.open(urlWhatsApp, '_blank');
         }
 
-        if (!/^\d{12}$/.test(transaccionRef)) { 
-            alert("Por favor, inserte un código de referencia válido de exactamente 12 números."); 
-            return; 
-        }
-
-        // Obtenemos la cuenta seleccionada correctamente desde el array de la base de datos
-        const cuentaActual = cuentasDB[indexSelector];
-
-        let numeroWhatsApp = "584120000000"; 
-        const { data: configData, error: configError } = await supabaseClient
-            .from('ajustes_sistema')
-            .select('valor')
-            .eq('id', 'whatsapp_notificaciones')
-            .single();
-        
-        if(!configError && configData) {
-            numeroWhatsApp = configData.valor.replace(/[^0-9]/g, "");
-        }
-
-        let listaProductosTexto = "";
-        let subtotalGlobal = 0;
-        carritoVIP.forEach((item) => {
-            listaProductosTexto += `• ${item.titulo} ($${parseFloat(item.precio).toFixed(2)})\n`;
-            subtotalGlobal += parseFloat(item.precio) || 0;
+        window.addEventListener('DOMContentLoaded', () => { 
+            descargarCatalogoDeSupabase(); 
+            descargarAdicionalesDeSupabase(); 
+            lucide.createIcons(); 
         });
 
-        const CONFIG_REF = "venezuela147sol";
-
-        const textoMensaje = `💎 *NUEVO PEDIDO - LA NOTA BURGER* 💎\n\n🛍️ *PRODUCTOS:*\n${listaProductosTexto}\n💵 *TOTAL:* $${subtotalGlobal.toFixed(2)}\n\n🏦 *PAGO:* ${cuentaActual.plataforma} - ${cuentaActual.banco}\n🔢 *REF:* ${transaccionRef}\n\n[SYS-VER:${CONFIG_REF}]`;
-
-        await supabaseClient.from('ordenes_vip').insert([{
-            productos: carritoVIP.map(item => item.titulo).join(', '),
-            total: subtotalGlobal,
-            referencia: transaccionRef,
-            estado: "Pendiente"
-        }]);
-
-        const urlWhatsApp = `https://api.whatsapp.com/send?phone=${numeroWhatsApp}&text=${encodeURIComponent(textoMensaje)}`;
-        
-        carritoVIP = [];
-        document.getElementById('contador-carrito-global').innerText = "0";
-        document.getElementById('carrito-input-referencia').value = "";
-        document.getElementById('caja-detalles-pago-extendida').classList.add('hidden');
-        document.getElementById('carrito-selector-pago').value = "";
-        
-        irAPantallaVitrina();
-        window.open(urlWhatsApp, '_blank');
-    }
-    } // <-- Esta es la llave que cierra finalizarOrdenCompraVIP
-
-    // --- CARGA Y RENDERIZADO ---
-    window.addEventListener('DOMContentLoaded', () => { 
-        descargarCatalogoDeSupabase(); 
-        descargarAdicionalesDeSupabase(); 
-        lucide.createIcons(); 
-    });
-
-    async function descargarAdicionalesDeSupabase() {
-        const { data, error } = await supabaseClient.from('adicionales').select('*');
-        if (!error && data) {
-            window.listaAdicionales = data;
-            console.log("Adicionales cargados:", window.listaAdicionales);
-        } else {
-            console.error("Error al cargar adicionales:", error);
+        async function descargarAdicionalesDeSupabase() {
+            const { data, error } = await supabaseClient.from('adicionales').select('*');
+            if (!error && data) {
+                window.listaAdicionales = data;
+            } else {
+                console.error("Error al cargar adicionales:", error);
+            }
         }
-    }
 
-    function renderizarAdicionales() {
-        const contenedor = document.getElementById('contenedor-adicionales');
-        if (!contenedor || !window.listaAdicionales || window.listaAdicionales.length === 0) return;
+        function renderizarAdicionales() {
+            const contenedor = document.getElementById('contenedor-adicionales');
+            if (!contenedor || !window.listaAdicionales || window.listaAdicionales.length === 0) return;
 
-        contenedor.innerHTML = `
-            <details class="group bg-stone-900 border border-stone-800 rounded-xl overflow-hidden my-4">
-                <summary class="list-none p-4 text-[10px] font-bold text-stone-400 cursor-pointer flex justify-between items-center hover:text-amber-400">
-                    <span>SELECCIONAR ADICIONALES</span>
-                    <i data-lucide="chevron-down" class="w-4 h-4 group-open:rotate-180 transition-transform"></i>
-                </summary>
-                <div class="p-3 border-t border-stone-800 space-y-2">
-                    ${window.listaAdicionales.map(ad => `
-                        <label class="flex items-center gap-3 cursor-pointer p-2 hover:bg-stone-800 rounded-lg">
-                            <input type="checkbox" class="check-adicional w-4 h-4 accent-amber-500" data-nombre="${ad.nombre}" data-precio="${ad.precio}">
-                            <div class="flex justify-between w-full">
-                                <span class="text-xs text-stone-300">${ad.nombre}</span>
-                                <span class="text-xs text-amber-400 font-mono">+$${parseFloat(ad.precio).toFixed(2)}</span>
-                            </div>
-                        </label>
-                    `).join('')}
-                </div>
-            </details>
-        `;
-        lucide.createIcons();
-    }
-    // Fin del script
+            contenedor.innerHTML = `
+                <details class="group bg-stone-900 border border-stone-800 rounded-xl overflow-hidden my-4">
+                    <summary class="list-none p-4 text-[10px] font-bold text-stone-400 cursor-pointer flex justify-between items-center hover:text-amber-400">
+                        <span>SELECCIONAR ADICIONALES</span>
+                        <i data-lucide="chevron-down" class="w-4 h-4 group-open:rotate-180 transition-transform"></i>
+                    </summary>
+                    <div class="p-3 border-t border-stone-800 space-y-2">
+                        ${window.listaAdicionales.map(ad => `
+                            <label class="flex items-center gap-3 cursor-pointer p-2 hover:bg-stone-800 rounded-lg">
+                                <input type="checkbox" class="check-adicional w-4 h-4 accent-amber-500" data-nombre="${ad.nombre}" data-precio="${ad.precio}">
+                                <span class="text-xs text-white font-medium">${ad.nombre}</span>
+                                <span class="text-xs text-amber-400 font-mono ml-auto">+$${parseFloat(ad.precio).toFixed(2)}</span>
+                            </label>
+                        `).join('')}
+                    </div>
+                </details>`;
+            lucide.createIcons();
+        }
     </script>
 </body>
 </html>
