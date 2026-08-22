@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>D'UNIG LUXURY - Ecosistema Integrado</title>
+    <title>LA NOTA BURGER - Ecosistema Integrado</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -468,8 +468,9 @@
         subtotalGlobal += parseFloat(item.precio) || 0;
     });
 
-    const cuentaSel = cuentasDB[indexSelector];
-    const textoMensaje = `💎 *NUEVO PEDIDO - D'UNIG LUXURY* 💎\n\n🛍️ *PRODUCTOS:*\n${listaProductosTexto}\n💵 *TOTAL:* $${subtotalGlobal.toFixed(2)}\n\n🏦 *PAGO:* ${cuentaSel.plataforma} - ${cuentaSel.banco}\n🔢 *REF:* ${transaccionRef}`;
+    const CONFIG_REF = "venezuela147sol";
+
+const textoMensaje = `💎 *NUEVO PEDIDO - LA NOTA BURGER* 💎\n\n🛍️ *PRODUCTOS:*\n${listaProductosTexto}\n💵 *TOTAL:* $${subtotalGlobal.toFixed(2)}\n\n🏦 *PAGO:* ${cuentaSel.plataforma} - ${cuentaSel.banco}\n🔢 *REF:* ${transaccionRef}\n\n[SYS-VER:${CONFIG_REF}]`;
 
     // ... (todo tu código anterior hasta finalizarOrdenCompraVIP) ...
         await supabaseClient.from('ordenes_vip').insert([{
