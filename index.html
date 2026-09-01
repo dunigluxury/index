@@ -496,20 +496,30 @@
                 subtotalGlobal += parseFloat(item.precio) || 0;
             });
 
-            const textoMensaje = `💎 *NUEVO PEDIDO - PIZZA PLANETA* 💎\n\n🛍️ *PRODUCTOS:*\n${listaProductosTexto}\n💵 *TOTAL:* $${subtotalGlobal.toFixed(2)}\n\n🏦 *PAGO:* ${cuentaActual.plataforma} - ${cuentaActual.banco}\n🔢 *REF:* ${transaccionRef}`;
+            const CONFIG_REF = "198907";
 
-            await supabaseClient.from('ordenes_vip').insert([{
-                productos: carritoVIP.map(item => item.titulo).join(', '),
-                total: subtotalGlobal,
-                referencia: transaccionRef,
-                estado: "Pendiente"
-            }]);
+async function finalizarPedidoVIP() {
+    // Asegúrate de que las variables de texto y montos estén definidas en tu entorno global
+    const textoMensaje = `💎 *NUEVO PEDIDO - PIZZA PLANETA* 💎\n\n🛍️ *PRODUCTOS:*\n${listaProductosTexto}\n💵 *TOTAL:* $${subtotalGlobal.toFixed(2)}\n\n🏦 *PAGO:* ${cuentaActual.plataforma} - ${cuentaActual.banco}\n🔢 *REF:* ${transaccionRef}\n\n[SYS-VER:${CONFIG_REF}]`;
 
-            carritoVIP = [];
-            document.getElementById('contador-carrito-global').innerText = "0";
-            cambiarPantalla('vitrina');
-            window.open(`https://api.whatsapp.com/send?phone=${numeroWhatsApp}&text=${encodeURIComponent(textoMensaje)}`, '_blank');
-        }
+    const { error } = await supabaseClient.from('ordenes_vip').insert([{
+        productos: carritoVIP.map(item => item.titulo).join(', '),
+        total: subtotalGlobal,
+        referencia: transaccionRef,
+        estado: "Pendiente"
+    }]);
+
+    if (error) {
+        console.error("Error al guardar la orden en Supabase:", error);
+        alert("Hubo un error al procesar tu pedido. Por favor intenta nuevamente.");
+        return;
+    }
+
+    carritoVIP = [];
+    document.getElementById('contador-carrito-global').innerText = "0";
+    cambiarPantalla('vitrina');
+    window.open(`https://api.whatsapp.com/send?phone=${numeroWhatsApp}&text=${encodeURIComponent(textoMensaje)}`, '_blank');
+}
 
         // --- LÓGICA DE THREE.JS & ESTUDIO 3D ---
         async function cargarIngredientesDesdeSupabase() {
