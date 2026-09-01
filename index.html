@@ -109,7 +109,7 @@
                         <p class="text-xs text-amber-500/70 font-bold uppercase tracking-wider mt-1">Puedes agregar cuantas veces quieras</p>
                     </div>
 
-                    <!-- Bandeja de Ingredientes Arrastrables -->
+                    <!-- Bandeja de Ingredientes Arrastrables con Imagen -->
                     <div class="grid grid-cols-2 gap-3" id="bandeja-ingredientes-arrastrables"></div>
                 </div>
 
@@ -170,12 +170,12 @@
         const precioBasePan = 1.50;
 
         const catalogoIngredientes3D = [
-            { id: 'carne', nombre: 'Carne a la Parrilla', precio: 2.00, color: 0x3d1c02, tipo: 'cilindro' },
-            { id: 'queso', nombre: 'Queso Cheddar Fundido', precio: 1.00, color: 0xffaa00, tipo: 'slab' },
-            { id: 'tocineta', nombre: 'Tocineta Crujiente', precio: 1.50, color: 0x5c1d1d, tipo: 'tira' },
-            { id: 'tomate', nombre: 'Tomate Rebanado 3D', precio: 0.50, color: 0xcc2200, tipo: 'rodaja' },
-            { id: 'lechuga', nombre: 'Lechuga Rizada', precio: 0.50, color: 0x22aa33, tipo: 'hoja' },
-            { id: 'salsas', nombre: 'Salsas Especiales', precio: 0.40, color: 0xd4ac0d, tipo: 'salsa' }
+            { id: 'carne', nombre: 'Carne a la Parrilla', precio: 2.00, color: 0x3d1c02, tipo: 'cilindro', imagen: 'https://images.unsplash.com/photo-1586190848861-99aa4a171e90?q=80&w=300' },
+            { id: 'queso', nombre: 'Queso Cheddar Fundido', precio: 1.00, color: 0xffaa00, tipo: 'slab', imagen: 'https://images.unsplash.com/photo-1631379578550-7038263db699?q=80&w=300' },
+            { id: 'tocineta', nombre: 'Tocineta Crujiente', precio: 1.50, color: 0x5c1d1d, tipo: 'tira', imagen: 'https://images.unsplash.com/photo-1607305387299-a3d9611cd469?q=80&w=300' },
+            { id: 'tomate', nombre: 'Tomate Rebanado 3D', precio: 0.50, color: 0xcc2200, tipo: 'rodaja', imagen: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?q=80&w=300' },
+            { id: 'lechuga', nombre: 'Lechuga Rizada', precio: 0.50, color: 0x22aa33, tipo: 'hoja', imagen: 'https://images.unsplash.com/photo-1622206151226-18ca2c4ab4a1?q=80&w=300' },
+            { id: 'salsas', nombre: 'Salsas Especiales', precio: 0.40, color: 0xd4ac0d, tipo: 'salsa', imagen: 'https://images.unsplash.com/photo-1472476443507-c7a5948773fc?q=80&w=300' }
         ];
 
         let scene, camera, renderer, hamburguesaGrupo;
@@ -206,7 +206,7 @@
         function inicializarThreeJS() {
             const container = document.getElementById('webgl-container');
             if(!container) return;
-            container.innerHTML = ""; // Limpiar contenedor previo si existiera
+            container.innerHTML = ""; 
 
             scene = new THREE.Scene();
             camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 1000);
@@ -254,15 +254,15 @@
             contenedor.innerHTML = "";
             catalogoIngredientes3D.forEach(ing => {
                 contenedor.innerHTML += `
-                    <div draggable="true" ondragstart="event.dataTransfer.setData('text/plain', '${ing.id}')" onclick="agregarCapa('${ing.id}')" class="draggable-item glass-panel border border-stone-800 hover:border-amber-500/60 p-3.5 rounded-2xl flex flex-col justify-between items-center text-center cursor-pointer shadow-lg">
-                        <div class="w-10 h-10 rounded-full flex items-center justify-center mb-2 shadow-inner" style="background-color: #${ing.color.toString(16).padStart(6, '0')};">
-                            <i data-lucide="plus" class="w-5 h-5 text-white drop-shadow"></i>
+                    <div draggable="true" ondragstart="event.dataTransfer.setData('text/plain', '${ing.id}')" onclick="agregarCapa('${ing.id}')" class="draggable-item glass-panel border border-stone-800 hover:border-amber-500/60 p-3 rounded-2xl flex flex-col justify-between items-center text-center cursor-pointer shadow-lg group">
+                        <div class="w-full h-16 rounded-xl overflow-hidden mb-2 relative">
+                            <img src="${ing.imagen}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300">
+                            <div class="absolute inset-0 bg-black/20"></div>
                         </div>
                         <span class="text-xs text-white font-bold block">${ing.nombre}</span>
-                        <span class="text-[10px] text-amber-400 font-mono mt-1">+$${ing.precio.toFixed(2)}</span>
+                        <span class="text-[10px] text-amber-400 font-mono mt-0.5">+$${ing.precio.toFixed(2)}</span>
                     </div>`;
             });
-            lucide.createIcons();
 
             const zonaDrop = document.getElementById('zona-drop-canvas');
             if(zonaDrop) {
@@ -336,8 +336,9 @@
 
             let alturaActualY = -2.2;
 
-            const panBaseGeo = new THREE.CylinderGeometry(2.2, 2.4, 0.6, 32);
-            const panMaterial = new THREE.MeshStandardMaterial({ color: 0xd9822b, roughness: 0.6 });
+            // Pan base con tono marrón tostado realista
+            const panBaseGeo = new THREE.CylinderGeometry(2.3, 2.45, 0.6, 32);
+            const panMaterial = new THREE.MeshStandardMaterial({ color: 0xc47622, roughness: 0.5 });
             const panBaseMesh = new THREE.Mesh(panBaseGeo, panMaterial);
             panBaseMesh.position.y = alturaActualY;
             hamburguesaGrupo.add(panBaseMesh);
@@ -348,34 +349,39 @@
                 const matCapa = new THREE.MeshStandardMaterial({ color: capa.color, roughness: 0.4 });
 
                 if (capa.tipo === 'cilindro') {
-                    const geo = new THREE.CylinderGeometry(2.1, 2.1, 0.45, 32);
+                    // Carne que sobresale ligeramente
+                    const geo = new THREE.CylinderGeometry(2.35, 2.35, 0.45, 32);
                     meshCapa = new THREE.Mesh(geo, matCapa);
                     alturaActualY += 0.35;
                 } else if (capa.tipo === 'slab') {
-                    const geo = new THREE.BoxGeometry(3.2, 0.15, 3.2);
+                    // Queso fundido ancho que sobresale visiblemente
+                    const geo = new THREE.BoxGeometry(3.6, 0.15, 3.6);
                     meshCapa = new THREE.Mesh(geo, matCapa);
                     alturaActualY += 0.2;
                 } else if (capa.tipo === 'tira') {
-                    const geo = new THREE.BoxGeometry(2.8, 0.1, 1.2);
+                    // Tocineta alargada y sobresaliente
+                    const geo = new THREE.BoxGeometry(3.2, 0.1, 1.6);
                     meshCapa = new THREE.Mesh(geo, matCapa);
                     alturaActualY += 0.15;
                 } else if (capa.tipo === 'rodaja') {
+                    // Tomates distribuidos hacia los bordes externos
                     const grupoTomates = new THREE.Group();
-                    for(let i=0; i<3; i++) {
-                        const geoT = new THREE.CylinderGeometry(0.8, 0.8, 0.15, 16);
+                    for(let i=0; i<4; i++) {
+                        const geoT = new THREE.CylinderGeometry(0.9, 0.9, 0.15, 16);
                         const meshT = new THREE.Mesh(geoT, matCapa);
-                        const ang = (i / 3) * Math.PI * 2;
-                        meshT.position.set(Math.cos(ang) * 1.1, 0, Math.sin(ang) * 1.1);
+                        const ang = (i / 4) * Math.PI * 2;
+                        meshT.position.set(Math.cos(ang) * 1.5, 0, Math.sin(ang) * 1.5);
                         grupoTomates.add(meshT);
                     }
                     meshCapa = grupoTomates;
                     alturaActualY += 0.2;
                 } else if (capa.tipo === 'hoja') {
-                    const geo = new THREE.CylinderGeometry(2.4, 2.4, 0.2, 16);
+                    // Lechuga rizada extendida que sobresale por los lados
+                    const geo = new THREE.CylinderGeometry(2.7, 2.8, 0.2, 16);
                     meshCapa = new THREE.Mesh(geo, matCapa);
                     alturaActualY += 0.2;
                 } else {
-                    const geo = new THREE.CylinderGeometry(2.0, 2.0, 0.1, 16);
+                    const geo = new THREE.CylinderGeometry(2.1, 2.1, 0.1, 16);
                     meshCapa = new THREE.Mesh(geo, matCapa);
                     alturaActualY += 0.1;
                 }
@@ -385,9 +391,10 @@
                 alturaActualY += 0.2;
             });
 
-            const panSupGeo = new THREE.SphereGeometry(2.2, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+            // Pan superior marrón tostado
+            const panSupGeo = new THREE.SphereGeometry(2.3, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2);
             const panSupMesh = new THREE.Mesh(panSupGeo, panMaterial);
-            panSupMesh.scale.set(1, 0.7, 1);
+            panSupMesh.scale.set(1, 0.75, 1);
             panSupMesh.position.y = alturaActualY + 0.1;
             hamburguesaGrupo.add(panSupMesh);
         }
@@ -413,7 +420,6 @@
             const grid = document.getElementById('grid-productos-vitrina');
             if(!grid) return;
 
-            // Traer todos los productos sin restricciones estrictas para asegurar que carguen tus datos
             const { data, error } = await supabaseClient.from('productos').select('*');
             
             if(error) {
