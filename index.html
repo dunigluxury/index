@@ -63,7 +63,7 @@
         <div id="grid-productos-vitrina" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
     </main>
 
-    <!-- VISTA 2: SIMULADOR 3D REAL (DRAG & DROP + RENDER THREE.JS) -->
+    <!-- VISTA 2: SIMULADOR 3D REAL -->
     <main id="vista-simulador3d" class="hidden max-w-7xl w-full mx-auto px-4 py-6 flex-grow space-y-6">
         <div class="flex justify-between items-center">
             <button onclick="cambiarPantalla('vitrina')" class="flex items-center gap-2 text-xs font-futurista uppercase tracking-widest text-stone-400 hover:text-amber-400 font-bold cursor-pointer transition-colors">
@@ -96,11 +96,11 @@
                 </div>
             </div>
 
-            <!-- Panel Lateral de Ingredientes (Cargado desde Supabase) -->
+            <!-- Panel Lateral de Ingredientes -->
             <div class="lg:col-span-5 space-y-5">
                 <div class="glass-panel p-6 rounded-3xl space-y-4">
                     <div>
-                        <h3 class="text-lg font-black font-futurista text-white uppercase tracking-wide">Ingredientes 3D (Desde Supabase)</h3>
+                        <h3 class="text-lg font-black font-futurista text-white uppercase tracking-wide">Ingredientes 3D</h3>
                         <p class="text-xs text-amber-500/70 font-bold uppercase tracking-wider mt-1">Arrastra o haz clic para agregar</p>
                     </div>
 
@@ -178,9 +178,18 @@
             if (nombre === 'simulador3d') {
                 setTimeout(async () => {
                     if (!scene) inicializarThreeJS();
+                    else {
+                        // Forzar reajuste del tamaño del canvas si ya estaba creado
+                        const container = document.getElementById('webgl-container');
+                        if (renderer && container) {
+                            renderer.setSize(container.clientWidth, container.clientHeight);
+                            camera.aspect = container.clientWidth / container.clientHeight;
+                            camera.updateProjectionMatrix();
+                        }
+                    }
                     await cargarIngredientesDesdeSupabase();
                     actualizarEscena3D();
-                }, 100);
+                }, 150);
             }
             if (nombre === 'carrito') {
                 renderizarCarrito();
@@ -204,7 +213,7 @@
                         precio: parseFloat(item.precio || item.valor || 0),
                         color: item.color || '#c47622',
                         tipo: item.tipo || 'cilindro',
-                        imagen_url: item.imagen_url || item.imagen || ''
+                        imagen_url: item.imagen_url || item.imagen || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=300'
                     }));
                     renderizarBandejaIngredientes();
                 }
@@ -279,7 +288,7 @@
             catalogoIngredientes3D.forEach(ing => {
                 contenedor.innerHTML += `
                     <div draggable="true" ondragstart="event.dataTransfer.setData('text/plain', '${ing.id}')" onclick="agregarCapa('${ing.id}')" class="draggable-item glass-panel border border-stone-800 hover:border-amber-500/60 p-3 rounded-2xl flex flex-col justify-between items-center text-center cursor-pointer shadow-lg group">
-                        <div class="w-full h-16 rounded-xl overflow-hidden mb-2 relative">
+                        <div class="w-full h-16 rounded-xl overflow-hidden mb-2 relative bg-stone-900">
                             <img src="${ing.imagen_url}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300">
                             <div class="absolute inset-0 bg-black/20"></div>
                         </div>
@@ -297,6 +306,7 @@
                     if(idIngrediente) agregarCapa(idIngrediente);
                 };
             }
+            lucide.createIcons();
         }
 
         function agregarCapa(id) {
@@ -353,8 +363,6 @@
 
         function crearPanConAjonjoli(esSuperior = false) {
             const grupoPan = new THREE.Group();
-            
-            // Pan marrón tostado realista (#c47622)
             const materialPan = new THREE.MeshStandardMaterial({ color: 0xc47622, roughness: 0.5 });
             
             if (!esSuperior) {
@@ -366,21 +374,6 @@
                 const meshSup = new THREE.Mesh(geoSup, materialPan);
                 meshSup.scale.set(1, 0.75, 1);
                 grupoPan.add(meshSup);
-            }
-
-            // Semillas de ajonjolí
-            const materialAjonjoli = new THREE.MeshBasicMaterial({ color: 0xfffdd0 });
-            const cantidadAjonjoli = esSuperior ? 16 : 8;
-            for (let i = 0; i < cantidadAjonjoli; i++) {
-                const geoSemilla = new THREE.CapsuleGeometry(0.04, 0.08, 4, 8);
-                const semilla = new THREE.Mesh(geoSemilla, materialAjonjoli);
-                
-                const angulo = Math.random() * Math.PI * 2;
-                const radio = Math.random() * 1.5;
-                semilla.position.set(Math.cos(angulo) * radio, esSuperior ? 0.9 : -0.25, Math.sin(angulo) * radio);
-                semilla.rotation.x = Math.random() * Math.PI;
-                semilla.rotation.z = Math.random() * Math.PI;
-                grupoPan.add(semilla);
             }
 
             return grupoPan;
@@ -395,7 +388,7 @@
 
             let alturaActualY = -2.2;
 
-            // Pan base con ajonjolí
+            // Pan base
             const panBaseMesh = crearPanConAjonjoli(false);
             panBaseMesh.position.y = alturaActualY;
             hamburguesaGrupo.add(panBaseMesh);
@@ -403,7 +396,13 @@
 
             capasActuales.forEach((capa) => {
                 let meshCapa;
-                const colorHex = typeof capa.color === 'string' ? parseInt(capa.color.replace('#', '0x')) : capa.color;
+                let colorHex = 0xc47622;
+                if (typeof capa.color === 'string') {
+                    colorHex = parseInt(capa.color.replace('#', '0x'));
+                } else if (typeof capa.color === 'number') {
+                    colorHex = capa.color;
+                }
+                
                 const matCapa = new THREE.MeshStandardMaterial({ color: colorHex, roughness: 0.4 });
 
                 if (capa.tipo === 'cilindro') {
@@ -444,7 +443,7 @@
                 alturaActualY += 0.2;
             });
 
-            // Pan superior marrón tostado con ajonjolí
+            // Pan superior
             const panSupMesh = crearPanConAjonjoli(true);
             panSupMesh.position.y = alturaActualY + 0.1;
             hamburguesaGrupo.add(panSupMesh);
