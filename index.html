@@ -3,173 +3,262 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arma tu Hamburguesa 3D - D'UNIG LUXURY</title>
+    <title>Constructor 3D: Lienzo de Capas - D'UNIG LUXURY</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Plus+Jakarta+Sans:wght@200;300;400;500;700&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #030202; }
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #050505; color: #f5f5f4; overflow-x: hidden; }
         .font-futurista { font-family: 'Orbitron', sans-serif; }
-        .glass-panel { background: linear-gradient(135deg, rgba(28, 25, 23, 0.7) 0%, rgba(12, 10, 9, 0.85) 100%); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .glass-panel { background: rgba(18, 18, 18, 0.75); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .glass-card { background: rgba(24, 24, 27, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.06); }
         .btn-oro { background: linear-gradient(135deg, #f5d77f 0%, #dfb347 50%, #c79524 100%); }
         
-        /* Efecto 3D y Flotante */
-        .ingrediente-3d {
-            transform: perspective(600px) rotateX(8deg);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.5), inset 0 2px 4px rgba(255,255,255,0.2);
-            transition: all 0.3s ease;
+        /* Efecto 3D y Perspectiva para las Capas */
+        .capa-3d {
+            transform: perspective(700px) rotateX(12deg) rotateY(-2deg);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6), inset 0 2px 5px rgba(255,255,255,0.25);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        @keyframes flotar {
-            0% { transform: translateY(0px) perspective(600px) rotateX(8deg); }
-            50% { transform: translateY(-5px) perspective(600px) rotateX(5deg); }
-            100% { transform: translateY(0px) perspective(600px) rotateX(8deg); }
+        .capa-3d:hover {
+            transform: perspective(700px) rotateX(4deg) rotateY(0deg) scale(1.02);
         }
-        .flotando {
-            animation: flotar 3s ease-in-out infinite;
+        @keyframes flotarLento {
+            0% { transform: perspective(700px) rotateX(12deg) translateY(0px); }
+            50% { transform: perspective(700px) rotateX(10deg) translateY(-4px); }
+            100% { transform: perspective(700px) rotateX(12deg) translateY(0px); }
         }
+        .flotar { animation: flotarLento 4s ease-in-out infinite; }
+
+        .draggable-item { cursor: grab; user-select: none; transition: transform 0.2s, border-color 0.2s; }
+        .draggable-item:active { cursor: grabbing; }
+        .drop-active { border-color: #fbbf24 !important; background: rgba(251, 191, 36, 0.05) !important; }
     </style>
 </head>
-<body class="text-stone-200 antialiased min-h-screen flex flex-col justify-between p-4 pb-12">
+<body class="min-h-screen flex flex-col justify-between p-4 sm:p-6 max-w-5xl mx-auto">
 
-    <div class="max-w-xl w-full mx-auto space-y-6">
-        <header class="text-center space-y-1">
-            <h1 class="text-lg font-black font-futurista text-amber-400 uppercase tracking-widest">Constructor 3D VIP</h1>
-            <p class="text-xs text-stone-400">Selecciona los ingredientes para armar tu estructura y ver su valor en tiempo real.</p>
-        </header>
-
-        <!-- ZONA DE ARMADO 3D (EL PLATO / VISTA DE CAPAS) -->
-        <div class="glass-panel border border-amber-500/30 rounded-3xl p-6 min-h-[320px] flex flex-col-reverse items-center justify-start gap-2.5 relative shadow-2xl">
-            
-            <!-- Base fija: Pan inferior -->
-            <div class="w-full bg-gradient-to-r from-amber-950 via-amber-900 to-amber-950 border border-amber-500/40 text-amber-300 font-futurista font-bold text-xs py-3.5 rounded-2xl text-center shadow-xl flex justify-between px-6">
-                <span>🍔 Pan Inferior (Base)</span>
-                <span class="font-mono text-amber-400">$1.00</span>
-            </div>
-            
-            <!-- Contenedor donde se apilan las capas 3D añadidas -->
-            <div id="pila-ingredientes-3d" class="w-full flex flex-col-reverse gap-2.5 items-center">
-                <span id="texto-vacio" class="text-xs text-stone-500 italic py-12">Toca los ingredientes abajo para añadirlos a tu hamburguesa 3D.</span>
-            </div>
+    <!-- ENCABEZADO -->
+    <header class="text-center space-y-2 mb-4">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-futurista uppercase tracking-widest">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> D'UNIG LUXURY ECOSISTEMA 3D
         </div>
+        <h1 class="text-xl sm:text-2xl font-black font-futurista text-white uppercase tracking-wider">Lienzo de Capas Interactivo</h1>
+        <p class="text-xs text-stone-400 max-w-md mx-auto">Arrastra los ingredientes de los costados hacia el centro para armar tu hamburguesa en perspectiva 3D real.</p>
+    </header>
 
-        <!-- PANEL DE TOTALES -->
-        <div class="glass-panel p-4 rounded-2xl border border-stone-800 flex items-center justify-between">
-            <span class="text-xs font-futurista text-stone-400 uppercase tracking-widest">Valor Total:</span>
-            <span id="precio-total" class="text-xl font-black font-futurista text-amber-400">$1.00</span>
-        </div>
-
-        <!-- BANDEJA DE INGREDIENTES 3D -->
-        <div class="space-y-2">
-            <h2 class="text-[10px] uppercase font-futurista text-amber-400 font-bold tracking-widest">Añadir Ingredientes:</h2>
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    <!-- CUERPO PRINCIPAL (3 COLUMNAS) -->
+    <main class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start mb-6">
+        
+        <!-- BANDEJA IZQUIERDA -->
+        <aside class="lg:col-span-3 space-y-3">
+            <h2 class="text-[11px] font-futurista text-amber-400 uppercase tracking-widest px-1">Base & Proteínas</h2>
+            <div class="grid grid-cols-2 lg:grid-cols-1 gap-2.5">
                 
-                <!-- Ingrediente: Carne -->
-                <button onclick="agregarIngrediente('Carne Jugosa 3D', 3.50, 'bg-gradient-to-r from-red-950 to-stone-950 border-red-500/50 text-red-200', 'utensils')"
-                        class="glass-panel p-3.5 rounded-2xl border border-stone-800 flex flex-col items-center justify-center gap-1.5 hover:border-amber-500/60 transition-all cursor-pointer group">
-                    <i data-lucide="utensils" class="w-6 h-6 text-red-400 group-hover:scale-110 transition-transform"></i>
-                    <span class="text-xs font-bold">Carne</span>
-                    <span class="text-[10px] font-mono text-amber-400">$3.50</span>
-                </button>
+                <div draggable="true" ondragstart="iniciarArrastre(event)" data-id="pan-inf" data-nombre="Pan Inferior" data-orden="1" data-precio="1.00" data-color="from-amber-950 to-stone-900 border-amber-500/40 text-amber-200" data-icono="utensils"
+                     class="draggable-item glass-card p-3 rounded-2xl flex items-center gap-3 hover:border-amber-500/60 shadow-lg">
+                    <div class="w-9 h-9 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-400 shrink-0"><i data-lucide="utensils" class="w-5 h-5"></i></div>
+                    <div class="overflow-hidden"><p class="text-xs font-bold text-white truncate">Pan Inferior</p><p class="text-[10px] font-mono text-amber-400">$1.00</p></div>
+                </div>
 
-                <!-- Ingrediente: Queso -->
-                <button onclick="agregarIngrediente('Queso Fundido', 1.50, 'bg-gradient-to-r from-amber-950 to-stone-950 border-amber-500/50 text-amber-200', 'layers')"
-                        class="glass-panel p-3.5 rounded-2xl border border-stone-800 flex flex-col items-center justify-center gap-1.5 hover:border-amber-500/60 transition-all cursor-pointer group">
-                    <i data-lucide="layers" class="w-6 h-6 text-amber-400 group-hover:scale-110 transition-transform"></i>
-                    <span class="text-xs font-bold">Queso</span>
-                    <span class="text-[10px] font-mono text-amber-400">$1.50</span>
-                </button>
+                <div draggable="true" ondragstart="iniciarArrastre(event)" data-id="carne" data-nombre="Carne Angus 200g" data-orden="2" data-precio="3.50" data-color="from-red-950 to-stone-950 border-red-500/50 text-red-200" data-icono="flame"
+                     class="draggable-item glass-card p-3 rounded-2xl flex items-center gap-3 hover:border-red-500/60 shadow-lg">
+                    <div class="w-9 h-9 rounded-xl bg-red-500/10 flex items-center justify-center text-red-400 shrink-0"><i data-lucide="flame" class="w-5 h-5"></i></div>
+                    <div class="overflow-hidden"><p class="text-xs font-bold text-white truncate">Carne Angus</p><p class="text-[10px] font-mono text-amber-400">$3.50</p></div>
+                </div>
 
-                <!-- Ingrediente: Tomate -->
-                <button onclick="agregarIngrediente('Tomate Flotante', 0.80, 'bg-gradient-to-r from-rose-950 to-stone-950 border-rose-500/50 text-rose-200', 'circle')"
-                        class="glass-panel p-3.5 rounded-2xl border border-stone-800 flex flex-col items-center justify-center gap-1.5 hover:border-amber-500/60 transition-all cursor-pointer group">
-                    <i data-lucide="circle" class="w-6 h-6 text-rose-500 group-hover:scale-110 transition-transform"></i>
-                    <span class="text-xs font-bold">Tomate</span>
-                    <span class="text-[10px] font-mono text-amber-400">$0.80</span>
-                </button>
+                <div draggable="true" ondragstart="iniciarArrastre(event)" data-id="queso" data-nombre="Queso Cheddar Fundido" data-orden="3" data-precio="1.50" data-color="from-amber-900/80 to-stone-950 border-amber-400/50 text-amber-100" data-icono="layers"
+                     class="draggable-item glass-card p-3 rounded-2xl flex items-center gap-3 hover:border-amber-400/60 shadow-lg">
+                    <div class="w-9 h-9 rounded-xl bg-amber-400/10 flex items-center justify-center text-amber-300 shrink-0"><i data-lucide="layers" class="w-5 h-5"></i></div>
+                    <div class="overflow-hidden"><p class="text-xs font-bold text-white truncate">Queso Cheddar</p><p class="text-[10px] font-mono text-amber-400">$1.50</p></div>
+                </div>
 
-                <!-- Ingrediente: Lechuga -->
-                <button onclick="agregarIngrediente('Lechuga Fresca', 0.70, 'bg-gradient-to-r from-emerald-950 to-stone-950 border-emerald-500/50 text-emerald-200', 'salad')"
-                        class="glass-panel p-3.5 rounded-2xl border border-stone-800 flex flex-col items-center justify-center gap-1.5 hover:border-amber-500/60 transition-all cursor-pointer group">
-                    <i data-lucide="salad" class="w-6 h-6 text-emerald-400 group-hover:scale-110 transition-transform"></i>
-                    <span class="text-xs font-bold">Lechuga</span>
-                    <span class="text-[10px] font-mono text-amber-400">$0.70</span>
-                </button>
+                <div draggable="true" ondragstart="iniciarArrastre(event)" data-id="tocineta" data-nombre="Tocineta Crujiente" data-orden="4" data-precio="2.00" data-color="from-orange-950 to-stone-950 border-orange-500/50 text-orange-200" data-icono="sparkles"
+                     class="draggable-item glass-card p-3 rounded-2xl flex items-center gap-3 hover:border-orange-500/60 shadow-lg">
+                    <div class="w-9 h-9 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-400 shrink-0"><i data-lucide="sparkles" class="w-5 h-5"></i></div>
+                    <div class="overflow-hidden"><p class="text-xs font-bold text-white truncate">Tocineta</p><p class="text-[10px] font-mono text-amber-400">$2.00</p></div>
+                </div>
 
             </div>
-        </div>
+        </aside>
 
-        <!-- Botón para enviar pedido por WhatsApp -->
-        <button onclick="enviarPedido3D()" class="w-full btn-oro text-stone-950 font-futurista font-black py-4 rounded-xl text-xs uppercase tracking-widest shadow-xl cursor-pointer">
-            Enviar Pedido 3D por WhatsApp
-        </button>
-    </div>
+        <!-- LIENZO CENTRAL (ZONA 3D) -->
+        <section class="lg:col-span-6 flex flex-col items-center">
+            <div id="zona-lienzo" 
+                 ondragover="permitirSoltar(event)" 
+                 ondragenter="entrarZona(event)" 
+                 ondragleave="salirZona(event)" 
+                 ondrop="soltarIngrediente(event)"
+                 class="glass-panel w-full border-2 border-dashed border-amber-500/30 rounded-3xl p-6 min-h-[420px] flex flex-col-reverse justify-start items-center gap-2.5 relative shadow-2xl transition-all">
+                
+                <div id="instruccion-vacia" class="absolute inset-0 flex flex-col items-center justify-center text-center p-6 pointer-events-none space-y-2">
+                    <div class="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 mb-1 animate-bounce">
+                        <i data-lucide="sandwich" class="w-7 h-7"></i>
+                    </div>
+                    <p class="text-sm font-bold font-futurista text-amber-300">Arrastra tus ingredientes aquí</p>
+                    <p class="text-xs text-stone-400 max-w-xs">El sistema ordenará automáticamente cada capa de manera física y realista en 3D.</p>
+                </div>
+
+                <div id="pila-capas-3d" class="w-full flex flex-col-reverse gap-2 items-center z-10 max-w-md"></div>
+            </div>
+
+            <!-- TOTALES Y ACCIÓN -->
+            <div class="w-full mt-4 glass-panel p-4 rounded-2xl flex items-center justify-between shadow-xl">
+                <div>
+                    <span class="text-[10px] font-futurista text-stone-400 uppercase tracking-widest block">Inversión Total:</span>
+                    <span id="precio-total" class="text-xl font-black font-futurista text-amber-400">$0.00</span>
+                </div>
+                <button onclick="enviarPedidoWhatsApp()" class="btn-oro text-stone-950 font-futurista font-black px-6 py-3 rounded-xl text-xs uppercase tracking-wider shadow-lg hover:scale-105 transition-transform cursor-pointer flex items-center gap-2">
+                    <i data-lucide="message-circle" class="w-4 h-4"></i> Pedir por WhatsApp
+                </button>
+            </div>
+        </section>
+
+        <!-- BANDEJA DERECHA -->
+        <aside class="lg:col-span-3 space-y-3">
+            <h2 class="text-[11px] font-futurista text-amber-400 uppercase tracking-widest px-1">Vegetales & Salsas</h2>
+            <div class="grid grid-cols-2 lg:grid-cols-1 gap-2.5">
+                
+                <div draggable="true" ondragstart="iniciarArrastre(event)" data-id="lechuga" data-nombre="Lechuga Crespa Fresca" data-orden="5" data-precio="0.70" data-color="from-emerald-950 to-stone-950 border-emerald-500/50 text-emerald-200" data-icono="salad"
+                     class="draggable-item glass-card p-3 rounded-2xl flex items-center gap-3 hover:border-emerald-500/60 shadow-lg">
+                    <div class="w-9 h-9 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0"><i data-lucide="salad" class="w-5 h-5"></i></div>
+                    <div class="overflow-hidden"><p class="text-xs font-bold text-white truncate">Lechuga</p><p class="text-[10px] font-mono text-amber-400">$0.70</p></div>
+                </div>
+
+                <div draggable="true" ondragstart="iniciarArrastre(event)" data-id="tomate" data-nombre="Tomate Redondo Flotante" data-orden="6" data-precio="0.80" data-color="from-rose-950 to-stone-950 border-rose-500/50 text-rose-200" data-icono="circle"
+                     class="draggable-item glass-card p-3 rounded-2xl flex items-center gap-3 hover:border-rose-500/60 shadow-lg">
+                    <div class="w-9 h-9 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-500 shrink-0"><i data-lucide="circle" class="w-5 h-5"></i></div>
+                    <div class="overflow-hidden"><p class="text-xs font-bold text-white truncate">Tomate 3D</p><p class="text-[10px] font-mono text-amber-400">$0.80</p></div>
+                </div>
+
+                <div draggable="true" ondragstart="iniciarArrastre(event)" data-id="cebolla" data-nombre="Cebolla Morada Crujiente" data-orden="7" data-precio="0.50" data-color="from-purple-950 to-stone-950 border-purple-500/50 text-purple-200" data-icono="disc"
+                     class="draggable-item glass-card p-3 rounded-2xl flex items-center gap-3 hover:border-purple-500/60 shadow-lg">
+                    <div class="w-9 h-9 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 shrink-0"><i data-lucide="disc" class="w-5 h-5"></i></div>
+                    <div class="overflow-hidden"><p class="text-xs font-bold text-white truncate">Cebolla</p><p class="text-[10px] font-mono text-amber-400">$0.50</p></div>
+                </div>
+
+                <div draggable="true" ondragstart="iniciarArrastre(event)" data-id="salsa-especial" data-nombre="Salsa Especial D'UNIG" data-orden="8" data-precio="0.60" data-color="from-yellow-950 to-stone-950 border-yellow-500/50 text-yellow-200" data-icono="droplet"
+                     class="draggable-item glass-card p-3 rounded-2xl flex items-center gap-3 hover:border-yellow-500/60 shadow-lg">
+                    <div class="w-9 h-9 rounded-xl bg-yellow-500/10 flex items-center justify-center text-yellow-400 shrink-0"><i data-lucide="droplet" class="w-5 h-5"></i></div>
+                    <div class="overflow-hidden"><p class="text-xs font-bold text-white truncate">Salsa Especial</p><p class="text-[10px] font-mono text-amber-400">$0.60</p></div>
+                </div>
+
+                <div draggable="true" ondragstart="iniciarArrastre(event)" data-id="pan-sup" data-nombre="Pan Superior con Ajonjolí" data-orden="9" data-precio="1.00" data-color="from-amber-900 to-stone-950 border-amber-500/50 text-amber-200" data-icono="utensils"
+                     class="draggable-item glass-card p-3 rounded-2xl flex items-center gap-3 hover:border-amber-500/60 shadow-lg">
+                    <div class="w-9 h-9 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-400 shrink-0"><i data-lucide="utensils" class="w-5 h-5"></i></div>
+                    <div class="overflow-hidden"><p class="text-xs font-bold text-white truncate">Pan Superior</p><p class="text-[10px] font-mono text-amber-400">$1.00</p></div>
+                </div>
+
+            </div>
+        </aside>
+
+    </main>
 
     <script>
-        window.addEventListener('DOMContentLoaded', () => { lucide.createIcons(); });
+        window.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            agregarIngredientePorDefecto({
+                id: 'pan-inf',
+                nombre: 'Pan Inferior',
+                precio: 1.00,
+                color: 'from-amber-950 to-stone-900 border-amber-500/40 text-amber-200',
+                icono: 'utensils',
+                orden: 1
+            });
+        });
 
-        let listaArmada = [];
-        let costoBase = 1.00; // Pan inferior
+        let ingredientesSeleccionados = [];
 
-        function agregarIngrediente(nombre, precio, estiloColor, icono) {
-            listaArmada.push({ nombre, precio, estiloColor, icono });
-            renderizarEstructura3D();
+        function iniciarArrastre(evento) {
+            const target = evento.currentTarget;
+            const datos = {
+                id: target.getAttribute('data-id'),
+                nombre: target.getAttribute('data-nombre'),
+                precio: parseFloat(target.getAttribute('data-precio')),
+                color: target.getAttribute('data-color'),
+                icono: target.getAttribute('data-icono'),
+                orden: parseInt(target.getAttribute('data-orden'))
+            };
+            evento.dataTransfer.setData('text/plain', JSON.stringify(datos));
         }
 
-        function renderizarEstructura3D() {
-            const contenedor = document.getElementById('pila-ingredientes-3d');
+        function permitirSoltar(evento) { evento.preventDefault(); }
+        function entrarZona(evento) { evento.currentTarget.classList.add('drop-active'); }
+        function salirZona(evento) { evento.currentTarget.classList.remove('drop-active'); }
+
+        function soltarIngrediente(evento) {
+            evento.preventDefault();
+            const zona = document.getElementById('zona-lienzo');
+            zona.classList.remove('drop-active');
+
+            const dataJSON = evento.dataTransfer.getData('text/plain');
+            if (!dataJSON) return;
+
+            const ingrediente = JSON.parse(dataJSON);
+            ingredientesSeleccionados.push(ingrediente);
+            ingredientesSeleccionados.sort((a, b) => a.orden - b.orden);
+
+            actualizarLienzo3D();
+        }
+
+        function agregarIngredientePorDefecto(ingrediente) {
+            ingredientesSeleccionados.push(ingrediente);
+            actualizarLienzo3D();
+        }
+
+        function actualizarLienzo3D() {
+            const contenedor = document.getElementById('pila-capas-3d');
+            const instruccion = document.getElementById('instruccion-vacia');
             contenedor.innerHTML = '';
 
-            if (listaArmada.length === 0) {
-                contenedor.innerHTML = '<span id="texto-vacio" class="text-xs text-stone-500 italic py-12">Toca los ingredientes abajo para añadirlos a tu hamburguesa 3D.</span>';
-                actualizarPrecioTotal();
-                return;
+            if (ingredientesSeleccionados.length > 0) {
+                instruccion.style.display = 'none';
+            } else {
+                instruccion.style.display = 'flex';
             }
 
-            listaArmada.forEach((item, index) => {
-                const elementoHTML = `
-                    <div class="w-full ${item.estiloColor} border py-3 px-5 rounded-2xl font-futurista font-bold text-xs flex items-center justify-between ingrediente-3d flotando shadow-lg">
-                        <div class="flex items-center gap-2.5">
-                            <i data-lucide="${item.icono}" class="w-4 h-4"></i>
+            ingredientesSeleccionados.forEach((item, index) => {
+                const htmlCapa = `
+                    <div class="w-full bg-gradient-to-r ${item.color} border py-3 px-5 rounded-2xl font-futurista font-bold text-xs flex items-center justify-between capa-3d flotar shadow-2xl">
+                        <div class="flex items-center gap-3">
+                            <div class="w-7 h-7 rounded-lg bg-black/30 flex items-center justify-center">
+                                <i data-lucide="${item.icono}" class="w-4 h-4"></i>
+                            </div>
                             <span>${item.nombre}</span>
                         </div>
                         <div class="flex items-center gap-4">
-                            <span class="font-mono text-amber-400">$${item.precio.toFixed(2)}</span>
-                            <button onclick="eliminarIngrediente(${index})" class="text-stone-400 hover:text-white text-xs font-mono cursor-pointer bg-black/40 px-2 py-0.5 rounded-lg">✕</button>
+                            <span class="font-mono text-amber-300">$${item.precio.toFixed(2)}</span>
+                            <button onclick="eliminarCapa(${index})" class="w-6 h-6 rounded-lg bg-black/40 hover:bg-red-500 text-stone-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer" title="Retirar capa">✕</button>
                         </div>
                     </div>
                 `;
-                contenedor.insertAdjacentHTML('beforeend', elementoHTML);
+                contenedor.insertAdjacentHTML('beforeend', htmlCapa);
             });
 
             lucide.createIcons();
-            actualizarPrecioTotal();
+            calcularTotal();
         }
 
-        function eliminarIngrediente(index) {
-            listaArmada.splice(index, 1);
-            renderizarEstructura3D();
+        function eliminarCapa(index) {
+            ingredientesSeleccionados.splice(index, 1);
+            actualizarLienzo3D();
         }
 
-        function actualizarPrecioTotal() {
-            let totalAdicionales = listaArmada.reduce((acc, curr) => acc + curr.precio, 0);
-            let totalFinal = costoBase + totalAdicionales;
-            document.getElementById('precio-total').innerText = `$${totalFinal.toFixed(2)}`;
+        function calcularTotal() {
+            let total = ingredientesSeleccionados.reduce((acc, curr) => acc + curr.precio, 0);
+            document.getElementById('precio-total').innerText = `$${total.toFixed(2)}`;
         }
 
-        function enviarPedido3D() {
-            if (listaArmada.length === 0) {
-                alert("Por favor añade al menos un ingrediente para armar tu producto.");
+        function enviarPedidoWhatsApp() {
+            if (ingredientesSeleccionados.length === 0) {
+                alert("Tu lienzo está vacío. Arrastra al menos un ingrediente.");
                 return;
             }
 
-            let totalAdicionales = listaArmada.reduce((acc, curr) => acc + curr.precio, 0);
-            let totalFinal = costoBase + totalAdicionales;
-            let nombres = listaArmada.map(i => `${i.nombre} ($${i.precio.toFixed(2)})`).join(', ');
-
-            let mensaje = encodeURIComponent(`¡Hola! He creado mi hamburguesa 3D personalizada:\n\n🍔 *Base:* Pan Inferior ($1.00)\n✨ *Ingredientes:* ${nombres}\n💰 *Total a Pagar:* $${totalFinal.toFixed(2)}\n\n¡Quiero confirmar este pedido!`);
+            let total = ingredientesSeleccionados.reduce((acc, curr) => acc + curr.precio, 0);
+            let detalle = ingredientesSeleccionados.map(i => `• ${i.nombre} ($${i.precio.toFixed(2)})`).join('%0A');
+            let mensaje = `¡Hola! He armado mi producto VIP en el Lienzo 3D:%0A%0A${detalle}%0A%0A💰 *Total a Pagar:* $${total.toFixed(2)}%0A%0A¡Quiero confirmar este pedido!`;
             
-            // Reemplaza con tu número de WhatsApp
-            window.open(`https://wa.me/584120000000?text=${mensaje}`, '_blank');
+            window.open(`https://wa.me/584221494236?text=${mensaje}`, '_blank');
         }
     </script>
 </body>
