@@ -3,175 +3,164 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PIZZA PLANETA - Burger Restaurant Simulator 3D</title>
+    <title>PIZZA PLANETA - Simulador 3D Real & Drag and Drop</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Plus+Jakarta+Sans:wght@200;300;400;500;700&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #050505; }
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Plus+Jakarta+Sans:wght@300;400;500;700&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #020202; overflow-x: hidden; }
         .font-futurista { font-family: 'Orbitron', sans-serif; }
-        .glow-gold { box-shadow: 0 0 25px rgba(229, 193, 88, 0.2); }
-        .glass-panel { background: rgba(18, 18, 18, 0.75); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.05); }
-        .grid-bg { background-image: linear-gradient(rgba(229, 193, 88, 0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(229, 193, 88, 0.015) 1px, transparent 1px); background-size: 32px 32px; }
-        
-        /* Estilos para las capas 3D simuladas en la barra */
-        .capa-3d {
-            width: 100%;
-            max-width: 220px;
-            margin: -3px auto;
-            position: relative;
-            transform-style: preserve-3d;
-            animation: saltarCapa 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-            filter: drop-shadow(0 6px 8px rgba(0,0,0,0.8));
-        }
-        @keyframes saltarCapa {
-            0% { transform: translateY(-60px) scale(0.4) rotateX(45deg); opacity: 0; }
-            100% { transform: translateY(0) scale(1) rotateX(0deg); opacity: 1; }
-        }
-        ::-webkit-scrollbar { width: 4px; }
+        .glass-panel { background: rgba(15, 15, 15, 0.85); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .grid-bg { background-image: radial-gradient(rgba(229, 193, 88, 0.08) 1px, transparent 1px); background-size: 24px 24px; }
+        .draggable-item { cursor: grab; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .draggable-item:active { cursor: grabbing; transform: scale(0.95); }
+        ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-thumb { background: #e5c158; border-radius: 10px; }
     </style>
 </head>
-<body class="text-stone-200 antialiased min-h-screen flex flex-col justify-between grid-bg relative overflow-x-hidden">
+<body class="text-stone-200 antialiased min-h-screen flex flex-col justify-between grid-bg relative">
 
-    <!-- ENCABEZADO VIP -->
-    <header class="bg-black/60 backdrop-blur-xl border-b border-stone-900 sticky top-0 z-50 px-4">
+    <!-- HEADER -->
+    <header class="bg-black/80 backdrop-blur-xl border-b border-stone-900 sticky top-0 z-50 px-4">
         <div class="max-w-7xl mx-auto h-20 flex items-center justify-between">
-            <div class="flex items-center gap-3 cursor-pointer" onclick="irAPantalla('vitrina')">
-                <div class="border border-amber-500/30 p-2 rounded-xl bg-stone-950 glow-gold">
-                    <i data-lucide="utensils-crossed" class="w-6 h-6 text-amber-400"></i>
+            <div class="flex items-center gap-3 cursor-pointer" onclick="cambiarPantalla('vitrina')">
+                <div class="border border-amber-500/30 p-2.5 rounded-2xl bg-stone-950 shadow-[0_0_20px_rgba(229,193,88,0.15)]">
+                    <i data-lucide="box" class="w-6 h-6 text-amber-400"></i>
                 </div>
                 <div>
-                    <h1 class="text-lg font-black tracking-wider text-white font-futurista">
+                    <h1 class="text-lg font-black tracking-widest text-white font-futurista">
                        PIZZA<span class="text-amber-400"> PLANETA</span>
                     </h1>
-                    <p class="text-[8px] text-amber-500/70 uppercase tracking-widest font-bold font-futurista">
-                        SIMULADOR 3D DE RESTAURANTE
+                    <p class="text-[8px] text-amber-500/70 uppercase tracking-[0.25em] font-bold font-futurista">
+                        STUDIO 3D REAL & DRAG DROP
                     </p>
                 </div>
             </div>
 
             <div class="flex items-center gap-3">
-                <button onclick="irAPantalla('simulador3d')" class="bg-gradient-to-r from-amber-500/20 to-amber-600/20 border border-amber-500/40 text-amber-400 px-4 py-2 rounded-xl text-xs font-futurista font-black uppercase tracking-wider flex items-center gap-2 hover:bg-amber-500 hover:text-black transition-all cursor-pointer">
-                    <i data-lucide="play-circle" class="w-4 h-4"></i> Entrar al Simulador 3D
+                <button onclick="cambiarPantalla('simulador3d')" class="bg-gradient-to-r from-amber-500/20 to-amber-600/20 border border-amber-500/40 text-amber-400 px-4 py-2.5 rounded-xl text-xs font-futurista font-black uppercase tracking-wider flex items-center gap-2 hover:bg-amber-500 hover:text-black transition-all cursor-pointer">
+                    <i data-lucide="play" class="w-4 h-4"></i> Simulador 3D Real
                 </button>
-                <button onclick="irAPantalla('carrito')" class="bg-stone-900 border border-amber-500/20 p-2.5 rounded-xl flex items-center gap-2 cursor-pointer hover:border-amber-500/50">
+                <button onclick="cambiarPantalla('carrito')" class="bg-stone-900 border border-amber-500/30 p-2.5 rounded-xl flex items-center gap-2 cursor-pointer hover:border-amber-500/60">
                     <i data-lucide="shopping-cart" class="w-4 h-4 text-amber-400"></i>
-                    <span id="contador-carrito" class="bg-amber-500 text-black font-mono text-[10px] font-black px-1.5 py-0.5 rounded">0</span>
+                    <span id="contador-carrito-badge" class="bg-amber-500 text-black font-mono text-[10px] font-black px-1.5 py-0.5 rounded-md">0</span>
                 </button>
             </div>
         </div>
     </header>
 
-    <!-- PANTALLA 1: MENÚ GENERAL -->
+    <!-- VISTA 1: VITRINA / CATÁLOGO -->
     <main id="vista-vitrina" class="max-w-7xl w-full mx-auto px-4 py-8 flex-grow space-y-8">
-        <div class="bg-stone-950/80 p-6 rounded-3xl border border-stone-900 flex flex-col md:flex-row justify-between items-center gap-4">
-            <div>
-                <h2 class="text-2xl font-black text-white font-futurista tracking-widest uppercase">CATÁLOGO DE COCINA 3D</h2>
-                <p class="text-xs text-amber-500/70 font-bold uppercase tracking-widest mt-1">Prepara hamburguesas interactivas como en los simuladores profesionales</p>
+        <div class="glass-panel p-8 rounded-3xl border border-stone-800/80 flex flex-col md:flex-row justify-between items-center gap-6 shadow-2xl">
+            <div class="space-y-2">
+                <span class="text-[10px] text-amber-400 font-futurista font-bold uppercase tracking-widest bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">Motor Gráfico WebGL Activo</span>
+                <h2 class="text-2xl md:text-3xl font-black text-white font-futurista tracking-wider uppercase">Crea tu Hamburguesa en 3D Real</h2>
+                <p class="text-xs text-stone-400 max-w-xl">Arrastra y suelta múltiples carnes jugosas, tomates rebanados en 3D, queso fundido y aderezos ilimitados directo en la barra de cocina.</p>
             </div>
-            <button onclick="irAPantalla('simulador3d')" class="bg-amber-400 hover:bg-amber-300 text-black font-futurista font-black px-6 py-3.5 rounded-xl text-xs uppercase tracking-wider flex items-center gap-2 shadow-xl cursor-pointer">
-                <i data-lucide="Gamepad-2" class="w-4 h-4"></i> Jugar Simulador 3D
+            <button onclick="cambiarPantalla('simulador3d')" class="bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-black font-futurista font-black px-8 py-4 rounded-2xl text-xs uppercase tracking-widest flex items-center gap-3 shadow-xl cursor-pointer shrink-0">
+                <i data-lucide="sparkles" class="w-5 h-5"></i> Iniciar Experiencia 3D
             </button>
         </div>
-        <div id="grid-productos" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        <div id="grid-productos-vitrina" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
     </main>
 
-    <!-- PANTALLA 2: SIMULADOR 3D ESTILO BURGER RESTAURANT SIMULATOR -->
+    <!-- VISTA 2: SIMULADOR 3D REAL (DRAG & DROP + RENDER THREE.JS) -->
     <main id="vista-simulador3d" class="hidden max-w-7xl w-full mx-auto px-4 py-6 flex-grow space-y-6">
         <div class="flex justify-between items-center">
-            <button onclick="irAPantalla('vitrina')" class="flex items-center gap-2 text-xs font-futurista uppercase tracking-widest text-stone-400 hover:text-amber-400 font-bold cursor-pointer">
+            <button onclick="cambiarPantalla('vitrina')" class="flex items-center gap-2 text-xs font-futurista uppercase tracking-widest text-stone-400 hover:text-amber-400 font-bold cursor-pointer transition-colors">
                 <i data-lucide="arrow-left" class="w-4 h-4"></i> Volver al Menú
             </button>
-            <div class="bg-stone-900 border border-amber-500/30 px-4 py-1.5 rounded-full flex items-center gap-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span class="text-[10px] font-futurista uppercase text-amber-400 font-bold">Estación Activa 3D</span>
+            <div class="bg-stone-900/90 border border-amber-500/30 px-4 py-1.5 rounded-full flex items-center gap-2.5 shadow-lg">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+                <span class="text-[10px] font-futurista uppercase tracking-widest text-amber-400 font-bold">Estación 3D Interactiva</span>
             </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             
-            <!-- Visor 3D e Interactivo de la Hamburguesa -->
-            <div class="lg:col-span-7 bg-stone-950 border border-stone-800 rounded-3xl p-6 flex flex-col items-center justify-between min-h-[520px] relative overflow-hidden shadow-2xl">
-                <!-- Lienzo 3D con Three.js para el fondo del restaurante -->
-                <div id="canvas-container-3d" class="absolute inset-0 opacity-40 pointer-events-none"></div>
-
-                <div class="absolute top-4 left-4 bg-black/80 border border-stone-800 px-3 py-1.5 rounded-xl z-10">
-                    <span class="text-[9px] font-futurista text-amber-400 uppercase tracking-widest">Vista de Barra 3D</span>
+            <!-- Lienzo 3D Real (Three.js Canvas + Zona Drop) -->
+            <div class="lg:col-span-7 bg-stone-950/90 border border-stone-800 rounded-3xl p-6 flex flex-col items-center justify-between min-h-[580px] relative overflow-hidden shadow-2xl" id="zona-drop-canvas">
+                <div class="absolute top-4 left-4 bg-black/80 border border-stone-800 px-3 py-1.5 rounded-xl z-20 backdrop-blur-md">
+                    <span class="text-[9px] font-futurista text-amber-400 uppercase tracking-widest">Render 3D en Tiempo Real</span>
                 </div>
 
-                <!-- Torre de Ingredientes Interactivos -->
-                <div class="w-full flex flex-col items-center justify-end my-auto z-10 pt-10">
-                    <div id="torre-ingredientes-3d" class="flex flex-col-reverse items-center justify-center w-full"></div>
-                    <!-- Plato Elegante 3D -->
-                    <div class="w-80 h-7 bg-gradient-to-r from-stone-200 via-white to-stone-400 rounded-full border-2 border-red-600 shadow-2xl mt-2 flex items-center justify-center">
-                        <div class="w-72 h-2.5 bg-stone-300 rounded-full"></div>
-                    </div>
-                </div>
+                <!-- Visor Three.js -->
+                <div id="webgl-container" class="w-full h-[400px] flex items-center justify-center cursor-grab active:cursor-grabbing"></div>
 
-                <div class="w-full flex justify-between items-center bg-stone-900/90 border border-stone-800 p-4 rounded-2xl z-10 mt-4">
+                <!-- Barra Inferior de Control de la Hamburguesa 3D -->
+                <div class="w-full flex justify-between items-center bg-stone-900/90 border border-stone-800/80 p-4 rounded-2xl z-20 backdrop-blur-md">
                     <div>
-                        <span class="text-[9px] uppercase tracking-widest text-stone-400 block font-futurista">Precio de la Creación</span>
-                        <span id="precio-torre-3d" class="text-2xl font-mono text-amber-400 font-black">$1.50</span>
+                        <span class="text-[9px] uppercase tracking-widest text-stone-400 block font-futurista">Valor Total de la Creación</span>
+                        <span id="precio-total-3d" class="text-2xl font-mono text-amber-400 font-black">$1.50</span>
                     </div>
-                    <button onclick="enviarCreacionAlCarrito()" class="bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-black font-futurista font-black px-6 py-3 rounded-xl text-xs uppercase tracking-wider shadow-lg cursor-pointer flex items-center gap-2">
-                        <i data-lucide="check" class="w-4 h-4"></i> Servir Pedido
+                    <button onclick="enviarCreacion3DAlCarrito()" class="bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-black font-futurista font-black px-6 py-3.5 rounded-xl text-xs uppercase tracking-wider shadow-lg cursor-pointer flex items-center gap-2">
+                        <i data-lucide="check-check" class="w-4 h-4"></i> Servir Hamburguesa 3D
                     </button>
                 </div>
             </div>
 
-            <!-- Panel de Control de Ingredientes (Estación de Cocina) -->
-            <div class="lg:col-span-5 glass-panel p-6 rounded-3xl space-y-5">
-                <div>
-                    <h3 class="text-xl font-black font-futurista text-white uppercase">Estación de Ingredientes</h3>
-                    <p class="text-xs text-amber-500/70 font-bold uppercase tracking-wider mt-1">Haz clic para colocar capas en la barra</p>
+            <!-- Panel Lateral de Ingredientes (Arrastrables y Pila con Botón X) -->
+            <div class="lg:col-span-5 space-y-5">
+                <div class="glass-panel p-6 rounded-3xl space-y-4">
+                    <div>
+                        <h3 class="text-lg font-black font-futurista text-white uppercase tracking-wide">Ingredientes 3D (Arrastra o haz Clic)</h3>
+                        <p class="text-xs text-amber-500/70 font-bold uppercase tracking-wider mt-1">Puedes agregar cuantas veces quieras</p>
+                    </div>
+
+                    <!-- Bandeja de Ingredientes Arrastrables -->
+                    <div class="grid grid-cols-2 gap-3" id="bandeja-ingredientes-arrastrables">
+                        <!-- Generado dinámicamente con JS -->
+                    </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3 max-h-[360px] overflow-y-auto pr-1" id="menu-estacion-cocina">
-                    <!-- Generado por JavaScript -->
+                <!-- Lista de Capas Actuales con opción de eliminar (X) -->
+                <div class="glass-panel p-6 rounded-3xl space-y-3">
+                    <div class="flex justify-between items-center border-b border-stone-800 pb-2">
+                        <h4 class="text-xs font-black font-futurista text-stone-300 uppercase tracking-widest">Capas en la Hamburguesa</h4>
+                        <button onclick="limpiarTodasLasCapas()" class="text-[9px] text-red-400 hover:underline uppercase font-bold">Limpiar Todo</button>
+                    </div>
+                    <div id="lista-capas-activas-pila" class="space-y-2 max-h-[180px] overflow-y-auto pr-1">
+                        <div class="text-xs text-stone-500 text-center py-4 font-mono">Sin ingredientes agregados aún.</div>
+                    </div>
                 </div>
-
-                <button onclick="reiniciarTorre()" class="w-full bg-stone-900 border border-stone-800 hover:bg-stone-800 text-stone-400 font-futurista font-bold py-3 rounded-xl text-xs uppercase tracking-widest cursor-pointer">
-                    Reiniciar Ingredientes
-                </button>
             </div>
         </div>
     </main>
 
-    <!-- PANTALLA 3: CARRITO Y CHECKOUT VIP -->
+    <!-- VISTA 3: CARRITO Y CHECKOUT VIP -->
     <main id="vista-carrito" class="hidden max-w-7xl w-full mx-auto px-4 py-8 flex-grow grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        <section class="lg:col-span-2 glass-panel p-6 rounded-3xl space-y-4">
-            <h2 class="text-xl font-black font-futurista text-white uppercase">Bolsa de Pedidos</h2>
-            <div id="lista-carrito-items" class="divide-y divide-stone-900"></div>
+        <section class="lg:col-span-2 glass-panel p-6 rounded-3xl space-y-4 shadow-2xl">
+            <h2 class="text-xl font-black font-futurista text-white uppercase tracking-wider">Bolsa de Pedidos VIP</h2>
+            <div id="lista-items-carrito" class="divide-y divide-stone-900"></div>
         </section>
 
-        <section class="bg-stone-950 border border-stone-800 p-6 rounded-3xl space-y-4">
-            <h3 class="text-lg font-black font-futurista text-white uppercase">Procesar Pago</h3>
+        <section class="bg-stone-950 border border-stone-800 p-6 rounded-3xl space-y-5 shadow-2xl">
+            <h3 class="text-lg font-black font-futurista text-white uppercase">Procesar Orden</h3>
             <div class="text-sm font-futurista text-stone-400">Total a Pagar: <span id="carrito-monto-total" class="text-2xl font-black font-mono text-white block mt-1">$0.00</span></div>
             
             <div class="space-y-3 pt-2">
                 <div>
                     <label class="text-[9px] uppercase text-stone-400 font-bold tracking-widest block font-futurista mb-1">Método de Pago</label>
-                    <select id="select-metodo-pago" onchange="mostrarDetallesBanco()" class="w-full bg-stone-900 border border-stone-800 text-xs text-stone-200 p-3 rounded-xl focus:outline-none"></select>
+                    <select id="select-metodo-pago" onchange="mostrarDetallesBanco()" class="w-full bg-stone-900 border border-stone-800 text-xs text-stone-200 p-3.5 rounded-xl focus:outline-none"></select>
                 </div>
 
-                <div id="caja-banco-detalle" class="hidden bg-stone-900/80 p-3 rounded-xl text-xs space-y-1 text-stone-300 font-mono"></div>
+                <div id="caja-banco-detalle" class="hidden bg-stone-900/90 border border-amber-500/20 p-4 rounded-xl text-xs space-y-1.5 text-stone-300 font-mono"></div>
 
                 <div>
                     <label class="text-[9px] uppercase text-stone-400 font-bold tracking-widest block font-futurista mb-1">Referencia (12 Dígitos)</label>
-                    <input type="text" id="input-ref-pago" maxlength="12" placeholder="000012345678" class="w-full bg-stone-900 border border-stone-800 text-xs text-white p-3 rounded-xl font-mono">
+                    <input type="text" id="input-ref-pago" maxlength="12" placeholder="000012345678" class="w-full bg-stone-900 border border-stone-800 text-xs text-white p-3.5 rounded-xl font-mono">
                 </div>
 
-                <button onclick="finalizarPedidoWhatsApp()" class="w-full bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-black font-futurista font-black py-3.5 rounded-xl text-xs uppercase tracking-wider cursor-pointer shadow-lg flex items-center justify-center gap-2">
+                <button onclick="finalizarOrdenWhatsApp()" class="w-full bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-black font-futurista font-black py-4 rounded-xl text-xs uppercase tracking-wider cursor-pointer shadow-xl flex items-center justify-center gap-2">
                     <i data-lucide="send" class="w-4 h-4"></i> Enviar Orden por WhatsApp
                 </button>
             </div>
         </section>
     </main>
 
-    <footer class="border-t border-stone-950 bg-black/80 p-4 text-center text-[10px] text-stone-600 font-mono tracking-widest mt-12">© 2026 PIZZA PLANETA SIMULATOR SYSTEM</footer>
+    <footer class="border-t border-stone-950 bg-black/80 p-4 text-center text-[10px] text-stone-600 font-mono tracking-widest mt-12">© 2026 PIZZA PLANETA REAL 3D ENGINE</footer>
 
     <script>
         const SUPABASE_URL = "https://vcymfspywjabnbddbruh.supabase.co"; 
@@ -179,110 +168,279 @@
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let productosDB = [], cuentasDB = [], carrito = [];
-        let torreIngredientes = [];
-        const precioPanBase = 1.50;
+        let capasActuales = []; // Pila activa con múltiples carnes, lechuga, etc.
+        const precioBasePan = 1.50;
 
+        // Catálogo de ingredientes 3D fotorrealistas con texturas modeladas
         const catalogoIngredientes3D = [
-            { id: 'carne', nombre: 'Carne a la Parrilla', precio: 2.00, html: '<div class="capa-3d h-11 bg-gradient-to-r from-stone-950 via-amber-950 to-stone-900 rounded-xl border-b-4 border-stone-900 flex items-center justify-center text-[9px] font-black text-amber-100 shadow-xl">🥩 Carne Jugosa Doble</div>' },
-            { id: 'queso', nombre: 'Queso Cheddar', precio: 1.00, html: '<div class="capa-3d h-5 bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 rounded-md border-b-2 border-amber-600 flex items-center justify-center text-[8px] font-black text-black">🧀 Queso Cheddar Fundido</div>' },
-            { id: 'tocineta', nombre: 'Tocineta Crujiente', precio: 1.50, html: '<div class="capa-3d h-4 bg-gradient-to-r from-amber-900 via-red-950 to-amber-950 rounded-md flex items-center justify-center text-[8px] font-bold text-amber-200">🥓 Tocineta Ahumada</div>' },
-            { id: 'tomate', nombre: 'Rodajas de Tomate', precio: 0.50, html: '<div class="capa-3d h-4 bg-gradient-to-r from-red-600 via-red-500 to-red-700 rounded-full flex items-center justify-center text-[8px] font-bold text-white">🍅 Tomate Fresco</div>' },
-            { id: 'lechuga', nombre: 'Lechuga Rizada', precio: 0.50, html: '<div class="capa-3d h-7 bg-gradient-to-r from-emerald-600 via-green-500 to-emerald-700 rounded-2xl flex items-center justify-center text-[8px] font-black text-white">🥬 Lechuga Gigante</div>' },
-            { id: 'salsas', nombre: 'Salsas Especiales', precio: 0.40, html: '<div class="capa-3d h-3.5 bg-gradient-to-r from-red-700 via-yellow-500 to-red-800 rounded-lg flex items-center justify-center text-[8px] font-black text-black">🟡🔴 Ketchup y Mostaza</div>' }
+            { id: 'carne', nombre: 'Carne a la Parrilla', precio: 2.00, color: 0x3d1c02, tipo: 'cilindro' },
+            { id: 'queso', nombre: 'Queso Cheddar Fundido', precio: 1.00, color: 0xffaa00, tipo: 'slab' },
+            { id: 'tocineta', nombre: 'Tocineta Crujiente', precio: 1.50, color: 0x5c1d1d, tipo: 'tira' },
+            { id: 'tomate', nombre: 'Tomate Rebanado 3D', precio: 0.50, color: 0xcc2200, tipo: 'rodaja' },
+            { id: 'lechuga', nombre: 'Lechuga Rizada', precio: 0.50, color: 0x22aa33, tipo: 'hoja' },
+            { id: 'salsas', nombre: 'Salsas Especiales', precio: 0.40, color: 0xd4ac0d, tipo: 'salsa' }
         ];
 
-        function irAPantalla(nombre) {
+        // Variables para Three.js
+        let scene, camera, renderer, hamburguesaGrupo;
+
+        function cambiarPantalla(nombre) {
             ['vitrina', 'simulador3d', 'carrito'].forEach(v => {
                 document.getElementById(`vista-${v}`).classList.add('hidden');
             });
             document.getElementById(`vista-${nombre}`).classList.remove('hidden');
-            if(nombre === 'simulador3d') {
-                renderizarEstacionCocina();
-                actualizarTorre3D();
+            if (nombre === 'simulador3d') {
+                setTimeout(() => {
+                    if (!scene) inicializarThreeJS();
+                    renderizarBandejaIngredientes();
+                    actualizarEscena3D();
+                }, 100);
             }
-            if(nombre === 'carrito') {
+            if (nombre === 'carrito') {
                 renderizarCarrito();
                 cargarCuentasPago();
             }
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        function renderizarEstacionCocina() {
-            const contenedor = document.getElementById('menu-estacion-cocina');
+        // Inicializar Motor 3D Real con Three.js
+        function inicializarThreeJS() {
+            const container = document.getElementById('webgl-container');
+            if(!container) return;
+
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 1000);
+            camera.position.set(0, 5, 12);
+            camera.lookAt(0, 0, 0);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            container.appendChild(renderer.domElement);
+
+            // Iluminación Profesional Studio PBR
+            const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
+            scene.add(ambientLight);
+
+            const dirLight = new THREE.DirectionalLight(0xfffaed, 2.0);
+            dirLight.position.set(5, 10, 7);
+            scene.add(dirLight);
+
+            const pointLight = new THREE.PointLight(0xe5c158, 1.5, 50);
+            pointLight.position.set(-5, 3, -5);
+            scene.add(pointLight);
+
+            hamburguesaGrupo = new THREE.Group();
+            scene.add(hamburguesaGrupo);
+
+            // Control de rotación con el mouse tipo Orbit simple
+            let isDragging = false;
+            let previousMousePosition = { x: 0, y: 0 };
+
+            container.addEventListener('mousedown', (e) => { isDragging = true; previousMousePosition = { x: e.clientX, y: e.clientY }; });
+            container.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                const deltaX = e.clientX - previousMousePosition.x;
+                hamburguesaGrupo.rotation.y += deltaX * 0.01;
+                previousMousePosition = { x: e.clientX, y: e.clientY };
+            });
+            window.addEventListener('mouseup', () => { isDragging = false; });
+
+            animarThreeJS();
+        }
+
+        function animarThreeJS() {
+            requestAnimationFrame(animarThreeJS);
+            if(renderer && scene && camera) {
+                renderer.render(scene, camera);
+            }
+        }
+
+        // Renderizar la bandeja lateral con soporte Drag and Drop y Clic
+        function renderizarBandejaIngredientes() {
+            const contenedor = document.getElementById('bandeja-ingredientes-arrastrables');
             if(!contenedor) return;
             contenedor.innerHTML = "";
             catalogoIngredientes3D.forEach(ing => {
                 contenedor.innerHTML += `
-                    <button onclick="agregarCapaTorre('${ing.id}')" class="bg-stone-900 border border-stone-800 hover:border-amber-500/50 p-3 rounded-xl text-left cursor-pointer transition-all flex justify-between items-center">
-                        <div>
-                            <span class="text-xs text-white font-bold block">${ing.nombre}</span>
-                            <span class="text-[10px] text-amber-400 font-mono">+$${ing.precio.toFixed(2)}</span>
+                    <div draggable="true" ondragstart="event.dataTransfer.setData('text/plain', '${ing.id}')" onclick="agregarCapa('${ing.id}')" class="draggable-item glass-panel border border-stone-800 hover:border-amber-500/60 p-3.5 rounded-2xl flex flex-col justify-between items-center text-center cursor-pointer shadow-lg">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center mb-2 shadow-inner" style="background-color: #${ing.color.toString(16).padStart(6, '0')};">
+                            <i data-lucide="plus" class="w-5 h-5 text-white drop-shadow"></i>
                         </div>
-                        <i data-lucide="plus-circle" class="w-4 h-4 text-amber-400"></i>
-                    </button>`;
+                        <span class="text-xs text-white font-bold block">${ing.nombre}</span>
+                        <span class="text-[10px] text-amber-400 font-mono mt-1">+$${ing.precio.toFixed(2)}</span>
+                    </div>`;
             });
             lucide.createIcons();
+
+            // Configurar Zona Drop
+            const zonaDrop = document.getElementById('zona-drop-canvas');
+            if(zonaDrop) {
+                zonaDrop.ondragover = (e) => e.preventDefault();
+                zonaDrop.ondrop = (e) => {
+                    e.preventDefault();
+                    const idIngrediente = e.dataTransfer.getData('text/plain');
+                    if(idIngrediente) agregarCapa(idIngrediente);
+                };
+            }
         }
 
-        function agregarCapaTorre(id) {
+        function agregarCapa(id) {
             const ing = catalogoIngredientes3D.find(i => i.id === id);
             if(ing) {
-                torreIngredientes.push(ing);
-                actualizarTorre3D();
+                capasActuales.push({ ...ing, uuid: Math.random().toString(36.substring(2, 9)) });
+                actualizarEscena3D();
+                renderizarListaCapasActivas();
             }
         }
 
-        function reiniciarTorre() {
-            torreIngredientes = [];
-            actualizarTorre3D();
+        function eliminarCapaPorUuid(uuid) {
+            capasActuales = capasActuales.filter(c => c.uuid !== uuid);
+            actualizarEscena3D();
+            renderizarListaCapasActivas();
         }
 
-        function actualizarTorre3D() {
-            const visor = document.getElementById('torre-ingredientes-3d');
-            const txtPrecio = document.getElementById('precio-torre-3d');
-            if(!visor || !txtPrecio) return;
-
-            let html = '<div class="capa-3d h-9 bg-gradient-to-r from-amber-600 via-amber-500 to-amber-700 rounded-b-2xl border-2 border-amber-800 flex items-center justify-center text-[9px] font-bold text-stone-950">🍞 Pan Inferior Esponjoso</div>';
-            let total = precioPanBase;
-
-            torreIngredientes.forEach(capa => {
-                html += capa.html;
-                total += capa.precio;
-            });
-
-            html += '<div class="capa-3d h-14 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600 rounded-t-[40px] border-2 border-amber-700 flex items-center justify-center text-[9px] font-black text-stone-950 relative"><span class="absolute text-[8px] text-amber-200 top-1.5">• ✨ • ✨ •</span>🍞 Pan Superior con Ajonjolí</div>';
-
-            visor.innerHTML = html;
-            txtPrecio.innerText = `$${total.toFixed(2)}`;
-            window.precioActualTorre = total;
+        function limpiarTodasLasCapas() {
+            capasActuales = [];
+            actualizarEscena3D();
+            renderizarListaCapasActivas();
         }
 
-        function enviarCreacionAlCarrito() {
-            if(torreIngredientes.length === 0) {
-                alert("Coloca al menos un ingrediente en la barra 3D para armar tu hamburguesa.");
+        // Renderizar la lista de capas con botón X
+        function renderizarListaCapasActivas() {
+            const contenedor = document.getElementById('lista-capas-activas-pila');
+            if(!contenedor) return;
+            contenedor.innerHTML = "";
+
+            if(capasActuales.length === 0) {
+                contenedor.innerHTML = `<div class="text-xs text-stone-500 text-center py-4 font-mono">Sin ingredientes agregados aún.</div>`;
+                document.getElementById('precio-total-3d').innerText = `$${precioBasePan.toFixed(2)}`;
                 return;
             }
-            const nombres = torreIngredientes.map(i => i.nombre).join(', ');
-            carrito.push({
-                titulo: `🍔 Burger Simulador 3D (${nombres})`,
-                precio: window.precioActualTorre,
-                imagen_url: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=600"
+
+            let total = precioBasePan;
+            capasActuales.forEach((capa, index) => {
+                total += capa.precio;
+                contenedor.innerHTML += `
+                    <div class="flex justify-between items-center bg-stone-900/90 border border-stone-800 px-3 py-2 rounded-xl text-xs">
+                        <div class="flex items-center gap-2">
+                            <span class="font-mono text-[10px] text-amber-400 font-bold">#${index + 1}</span>
+                            <span class="text-stone-200 font-bold">${capa.nombre}</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="font-mono text-amber-400">+$${capa.precio.toFixed(2)}</span>
+                            <button onclick="eliminarCapaPorUuid('${capa.uuid}')" class="w-5 h-5 bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white rounded-md flex items-center justify-center transition-colors font-bold text-[10px]">✕</button>
+                        </div>
+                    </div>`;
             });
-            document.getElementById('contador-carrito').innerText = carrito.length;
-            alert("¡Hamburguesa servida y añadida al carrito con éxito!");
-            torreIngredientes = [];
-            irAPantalla('vitrina');
+
+            document.getElementById('precio-total-3d').innerText = `$${total.toFixed(2)}`;
+            window.precioFinal3D = total;
         }
 
-        async function cargarProductosSupabase() {
+        // Reconstruir la geometría 3D en Three.js con capas reales y tomates rebanados 3D
+        function actualizarEscena3D() {
+            if(!hamburguesaGrupo) return;
+
+            // Limpiar grupo anterior
+            while(hamburguesaGrupo.children.length > 0){ 
+                hamburguesaGrupo.remove(hamburguesaGrupo.children[0]); 
+            }
+
+            let alturaActualY = -2.2;
+
+            // 1. Pan Base Inferior (Cylinder 3D)
+            const panBaseGeo = new THREE.CylinderGeometry(2.2, 2.4, 0.6, 32);
+            const panMaterial = new THREE.MeshStandardMaterial({ color: 0xd9822b, roughness: 0.6 });
+            const panBaseMesh = new THREE.Mesh(panBaseGeo, panMaterial);
+            panBaseMesh.position.y = alturaActualY;
+            hamburguesaGrupo.add(panBaseMesh);
+            alturaActualY += 0.5;
+
+            // 2. Apilar dinámicamente cada ingrediente real en 3D
+            capasActuales.forEach((capa) => {
+                let meshCapa;
+                const matCapa = new THREE.MeshStandardMaterial({ color: capa.color, roughness: 0.4 });
+
+                if (capa.tipo === 'cilindro') {
+                    // Carne a la parrilla gruesa 3D
+                    const geo = new THREE.CylinderGeometry(2.1, 2.1, 0.45, 32);
+                    meshCapa = new THREE.Mesh(geo, matCapa);
+                    alturaActualY += 0.35;
+                } else if (capa.tipo === 'slab') {
+                    // Queso Cheddar fundido (forma cuadrada redondeada o disco)
+                    const geo = new THREE.BoxGeometry(3.2, 0.15, 3.2);
+                    meshCapa = new THREE.Mesh(geo, matCapa);
+                    alturaActualY += 0.2;
+                } else if (capa.tipo === 'tira') {
+                    // Tocineta
+                    const geo = new THREE.BoxGeometry(2.8, 0.1, 1.2);
+                    meshCapa = new THREE.Mesh(geo, matCapa);
+                    alturaActualY += 0.15;
+                } else if (capa.tipo === 'rodaja') {
+                    // Tomates rebanados 3D (pequeños discos distribuidos)
+                    const grupoTomates = new THREE.Group();
+                    for(let i=0; i<3; i++) {
+                        const geoT = new THREE.CylinderGeometry(0.8, 0.8, 0.15, 16);
+                        const meshT = new THREE.Mesh(geoT, matCapa);
+                        const ang = (i / 3) * Math.PI * 2;
+                        meshT.position.set(Math.cos(ang) * 1.1, 0, Math.sin(ang) * 1.1);
+                        grupoTomates.add(meshT);
+                    }
+                    meshCapa = grupoTomates;
+                    alturaActualY += 0.2;
+                } else if (capa.tipo === 'hoja') {
+                    // Lechuga rizada (plano ondulado)
+                    const geo = new THREE.CylinderGeometry(2.4, 2.4, 0.2, 16);
+                    meshCapa = new THREE.Mesh(geo, matCapa);
+                    alturaActualY += 0.2;
+                } else {
+                    // Salsas
+                    const geo = new THREE.CylinderGeometry(2.0, 2.0, 0.1, 16);
+                    meshCapa = new THREE.Mesh(geo, matCapa);
+                    alturaActualY += 0.1;
+                }
+
+                meshCapa.position.y = alturaActualY;
+                hamburguesaGrupo.add(meshCapa);
+                alturaActualY += 0.2;
+            });
+
+            // 3. Pan Superior con Ajonjolí (Domo 3D)
+            const panSupGeo = new THREE.SphereGeometry(2.2, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+            const panSupMesh = new THREE.Mesh(panSupGeo, panMaterial);
+            panSupMesh.scale.set(1, 0.7, 1);
+            panSupMesh.position.y = alturaActualY + 0.1;
+            hamburguesaGrupo.add(panSupMesh);
+        }
+
+        function enviarCreacion3DAlCarrito() {
+            if (capasActuales.length === 0) {
+                alert("Arma tu hamburguesa 3D agregando al menos un ingrediente.");
+                return;
+            }
+            const nombres = capasActuales.map(i => i.nombre).join(', ');
+            carrito.push({
+                titulo: `🍔 Burger 3D Real (${nombres})`,
+                precio: window.precioFinal3D || 1.50,
+                imagen_url: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=600"
+            });
+            document.getElementById('contador-carrito-badge').innerText = carrito.length;
+            alert("¡Hamburguesa 3D agregada con éxito al carrito!");
+            capasActuales = [];
+            cambiarPantalla('vitrina');
+        }
+
+        async function cargarCatalogoSupabase() {
             const { data } = await supabaseClient.from('productos').select('*').eq('instagram_dueno', 'luxury_store');
             if(data) {
                 productosDB = data;
-                const grid = document.getElementById('grid-productos');
+                const grid = document.getElementById('grid-productos-vitrina');
+                if(!grid) return;
                 grid.innerHTML = "";
                 productosDB.forEach(p => {
                     grid.innerHTML += `
-                        <div class="glass-panel rounded-3xl overflow-hidden border border-stone-900 flex flex-col justify-between">
+                        <div class="glass-panel rounded-3xl overflow-hidden border border-stone-800 flex flex-col justify-between shadow-xl">
                             <div class="aspect-video bg-stone-950 overflow-hidden">
                                 <img src="${p.imagen_url || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600'}" class="w-full h-full object-cover">
                             </div>
@@ -290,7 +448,7 @@
                                 <h3 class="font-futurista font-bold text-xs text-white uppercase">${p.titulo}</h3>
                                 <div class="flex justify-between items-center pt-2 border-t border-stone-900">
                                     <span class="font-mono text-xs text-amber-400 font-bold">$${parseFloat(p.precio).toFixed(2)}</span>
-                                    <button onclick="agregarDirecto('${p.titulo}', ${p.precio}, '${p.imagen_url}')" class="bg-amber-400 hover:bg-amber-300 text-black px-3.5 py-1.5 rounded-xl text-[10px] font-futurista font-black uppercase cursor-pointer">Añadir</button>
+                                    <button onclick="agregarDirectoVitrina('${p.titulo}', ${p.precio}, '${p.imagen_url}')" class="bg-amber-400 hover:bg-amber-300 text-black px-4 py-2 rounded-xl text-[10px] font-futurista font-black uppercase cursor-pointer">Añadir</button>
                                 </div>
                             </div>
                         </div>`;
@@ -298,14 +456,15 @@
             }
         }
 
-        function agregarDirecto(titulo, precio, imagen_url) {
+        function agregarDirectoVitrina(titulo, precio, imagen_url) {
             carrito.push({ titulo, precio, imagen_url });
-            document.getElementById('contador-carrito').innerText = carrito.length;
+            document.getElementById('contador-carrito-badge').innerText = carrito.length;
             alert(`¡"${titulo}" agregado al carrito!`);
         }
 
         function renderizarCarrito() {
-            const cont = document.getElementById('lista-carrito-items');
+            const cont = document.getElementById('lista-items-carrito');
+            if(!cont) return;
             cont.innerHTML = "";
             let total = 0;
             if(carrito.length === 0) {
@@ -321,7 +480,7 @@
                             <img src="${item.imagen_url}" class="w-12 h-12 object-cover rounded-xl">
                             <div>
                                 <h4 class="text-xs font-bold text-white font-futurista uppercase">${item.titulo}</h4>
-                                <button onclick="carrito.splice(${idx},1);renderizarCarrito();document.getElementById('contador-carrito').innerText=carrito.length;" class="text-[10px] text-red-400 hover:underline">Eliminar</button>
+                                <button onclick="carrito.splice(${idx},1);renderizarCarrito();document.getElementById('contador-carrito-badge').innerText=carrito.length;" class="text-[10px] text-red-400 hover:underline">Eliminar</button>
                             </div>
                         </div>
                         <span class="font-mono text-amber-400 font-bold">$${item.precio.toFixed(2)}</span>
@@ -332,6 +491,7 @@
 
         async function cargarCuentasPago() {
             const sel = document.getElementById('select-metodo-pago');
+            if(!sel) return;
             const { data } = await supabaseClient.from('cuentas_pago').select('*');
             if(data) {
                 cuentasDB = data;
@@ -345,13 +505,14 @@
         function mostrarDetallesBanco() {
             const idx = document.getElementById('select-metodo-pago').value;
             const caja = document.getElementById('caja-banco-detalle');
+            if(!caja) return;
             if(idx === "" || !cuentasDB[idx]) { caja.classList.add('hidden'); return; }
             const c = cuentasDB[idx];
             caja.classList.remove('hidden');
             caja.innerHTML = `<div><b>Banco:</b> ${c.banco}</div><div><b>Titular:</b> ${c.titular}</div><div><b>CI/RIF:</b> ${c.ci}</div><div><b>Teléfono:</b> ${c.telefono}</div>`;
         }
 
-        async function finalizarPedidoWhatsApp() {
+        async function finalizarOrdenWhatsApp() {
             if(carrito.length === 0) { alert("Agrega productos primero."); return; }
             const ref = document.getElementById('input-ref-pago').value.trim();
             const idx = document.getElementById('select-metodo-pago').value;
@@ -367,7 +528,7 @@
             const { data } = await supabaseClient.from('ajustes_sistema').select('valor').eq('id', 'whatsapp_notificaciones').single();
             if(data) wsNum = data.valor.replace(/[^0-9]/g, "");
 
-            const mensaje = `🎮 *PEDIDO 3D - PIZZA PLANETA* 🎮\n\n${lista}\n\n💵 *TOTAL:* $${total.toFixed(2)}\n🏦 *PAGO:* ${cuenta.plataforma} (${cuenta.banco})\n🔢 *REF:* ${ref}`;
+            const mensaje = `🍔 *PEDIDO 3D REAL - PIZZA PLANETA* 🍔\n\n${lista}\n\n💵 *TOTAL:* $${total.toFixed(2)}\n🏦 *PAGO:* ${cuenta.plataforma} (${cuenta.banco})\n🔢 *REF:* ${ref}`;
 
             await supabaseClient.from('ordenes_vip').insert([{
                 productos: carrito.map(i => i.titulo).join(', '),
@@ -377,39 +538,14 @@
             }]);
 
             carrito = [];
-            document.getElementById('contador-carrito').innerText = "0";
-            irAPantalla('vitrina');
+            document.getElementById('contador-carrito-badge').innerText = "0";
+            cambiarPantalla('vitrina');
             window.open(`https://api.whatsapp.com/send?phone=${wsNum}&text=${encodeURIComponent(mensaje)}`, '_blank');
         }
 
-        // Inicializador de entorno 3D de fondo con Three.js
         window.addEventListener('DOMContentLoaded', () => {
-            cargarProductosSupabase();
+            cargarCatalogoSupabase();
             lucide.createIcons();
-
-            // Configurar fondo Three.js sutil
-            const container = document.getElementById('canvas-container-3d');
-            if(container) {
-                const scene = new THREE.Scene();
-                const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
-                const renderer = new THREE.WebGLRenderer({ alpha: true });
-                renderer.setSize(container.clientWidth, container.clientHeight);
-                container.appendChild(renderer.domElement);
-
-                const geometry = new THREE.TorusGeometry(10, 3, 16, 100);
-                const material = new THREE.MeshBasicMaterial({ color: 0xe5c158, wireframe: true });
-                const torus = new THREE.Mesh(geometry, material);
-                scene.add(torus);
-                camera.position.z = 30;
-
-                function animate() {
-                    requestAnimationFrame(animate);
-                    torre.rotation.x += 0.005;
-                    torre.rotation.y += 0.005;
-                    renderer.render(scene, camera);
-                }
-                // Si deseas activar la animación 3D de fondo: animate();
-            }
         });
     </script>
 </body>
