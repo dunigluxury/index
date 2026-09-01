@@ -362,9 +362,10 @@
             window.precioFinal3D = total;
         }
 
-        function crearPanGrisConPuntitos(esSuperior = false) {
+        function crearPanBeigeOscuroConPuntitos(esSuperior = false) {
             const grupoPan = new THREE.Group();
-            const materialPan = new THREE.MeshStandardMaterial({ color: 0x7c7c7c, roughness: 0.6 });
+            // Color beige oscuro modificado (ej. #8c6747)
+            const materialPan = new THREE.MeshStandardMaterial({ color: 0x8c6747, roughness: 0.55 });
             
             if (!esSuperior) {
                 const geoBase = new THREE.CylinderGeometry(2.3, 2.45, 0.6, 32);
@@ -376,13 +377,23 @@
                 meshSup.scale.set(1, 0.75, 1);
                 grupoPan.add(meshSup);
 
-                const materialPuntito = new THREE.MeshStandardMaterial({ color: 0x333333 });
-                for(let i=0; i<12; i++) {
-                    const geoPunto = new THREE.SphereGeometry(0.06, 8, 8);
+                // Aumentados los puntitos arriba (más cantidad y mejor distribución)
+                const materialPuntito = new THREE.MeshStandardMaterial({ color: 0x3d2715 });
+                const totalPuntitos = 28;
+                for(let i = 0; i < totalPuntitos; i++) {
+                    const geoPunto = new THREE.SphereGeometry(0.05, 8, 8);
                     const meshPunto = new THREE.Mesh(geoPunto, materialPuntito);
-                    const ang = (i / 12) * Math.PI * 2;
-                    const radioDist = 1.0 + (i % 2) * 0.5;
-                    meshPunto.position.set(Math.cos(ang) * radioDist, 1.2 + (i%3)*0.1, Math.sin(ang) * radioDist);
+                    
+                    // Distribución en espiral/esfera superior
+                    const phi = Math.acos(-1 + (2 * i) / totalPuntitos) * 0.5; // solo parte superior
+                    const theta = Math.sqrt(totalPuntitos * Math.PI) * phi;
+                    
+                    const radioDist = 1.6 * Math.sin(phi);
+                    const posX = radioDist * Math.cos(theta);
+                    const posZ = radioDist * Math.sin(theta);
+                    const posY = 1.1 + (Math.cos(phi) * 0.4);
+
+                    meshPunto.position.set(posX, posY, posZ);
                     grupoPan.add(meshPunto);
                 }
             }
@@ -399,7 +410,7 @@
 
             let alturaActualY = -2.2;
 
-            const panBaseMesh = crearPanGrisConPuntitos(false);
+            const panBaseMesh = crearPanBeigeOscuroConPuntitos(false);
             panBaseMesh.position.y = alturaActualY;
             hamburguesaGrupo.add(panBaseMesh);
             alturaActualY += 0.5;
@@ -420,7 +431,6 @@
                     meshCapa = new THREE.Mesh(geo, matCapa);
                     alturaActualY += 0.35;
                 } else if (capa.tipo === 'cilindro_exacto') {
-                    // Lechuga ajustada exactamente al tamaño de la carne (radio 2.35)
                     const geo = new THREE.CylinderGeometry(2.35, 2.35, 0.15, 32);
                     meshCapa = new THREE.Mesh(geo, matCapa);
                     alturaActualY += 0.15;
@@ -429,7 +439,6 @@
                     meshCapa = new THREE.Mesh(geo, matCapa);
                     alturaActualY += 0.2;
                 } else if (capa.tipo === 'tira_sobresaliente') {
-                    // Tiras de tocineta cruzadas y sobresaliendo más hacia afuera
                     const grupoTocineta = new THREE.Group();
                     for(let i=0; i<3; i++) {
                         const geoT = new THREE.BoxGeometry(4.2, 0.08, 1.1);
@@ -440,7 +449,6 @@
                     meshCapa = grupoTocineta;
                     alturaActualY += 0.2;
                 } else if (capa.tipo === 'rodaja_sobresaliente') {
-                    // Tomates distribuidos más hacia los extremos para que sobresalgan
                     const grupoTomates = new THREE.Group();
                     for(let i=0; i<4; i++) {
                         const geoT = new THREE.CylinderGeometry(1.1, 1.1, 0.15, 16);
@@ -452,7 +460,6 @@
                     meshCapa = grupoTomates;
                     alturaActualY += 0.2;
                 } else if (capa.tipo === 'huevo_frito') {
-                    // Diseño detallado de huevo frito (Clara blanca + Yema amarilla)
                     const grupoHuevo = new THREE.Group();
                     const geoClara = new THREE.CylinderGeometry(2.4, 2.4, 0.12, 32);
                     const matClara = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });
@@ -479,7 +486,7 @@
                 alturaActualY += 0.2;
             });
 
-            const panSupMesh = crearPanGrisConPuntitos(true);
+            const panSupMesh = crearPanBeigeOscuroConPuntitos(true);
             panSupMesh.position.y = alturaActualY + 0.1;
             hamburguesaGrupo.add(panSupMesh);
         }
