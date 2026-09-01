@@ -24,17 +24,18 @@
             transform: scale(1.08);
             box-shadow: 0 6px 25px rgba(223, 179, 71, 0.6), inset 0 2px 4px rgba(255, 255, 255, 0.8);
         }
-        /* Estilos visuales exactos estilo juego arcade para las capas */
+        
+        /* Capas realistas idénticas al juego arcade de la segunda imagen */
         .capa-arcade {
             width: 100%;
-            max-width: 220px;
-            margin: -2px auto;
+            max-width: 240px;
+            margin: -3px auto;
             position: relative;
             animation: apilarCapaRealista 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.4);
+            filter: drop-shadow(0 4px 4px rgba(0,0,0,0.6));
         }
         @keyframes apilarCapaRealista {
-            0% { transform: translateY(-30px) scale(0.7); opacity: 0; }
+            0% { transform: translateY(-40px) scale(0.6); opacity: 0; }
             100% { transform: translateY(0) scale(1); opacity: 1; }
         }
         ::-webkit-scrollbar { width: 4px; }
@@ -79,14 +80,14 @@
                     MENÚ DIGITAL VIP
                 </h2>
                 <p class="text-[10px] sm:text-xs text-amber-500/70 font-bold uppercase tracking-[0.2em] mt-1">
-                    Selecciona tus especialidades favoritas o crea tu hamburguesa capa por capa
+                    Selecciona tus especialidades favoritas o arma tu hamburguesa exacta por capas
                 </p>
             </div>
         </div>
         <div id="grid-productos-vitrina" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
     </main>
 
-    <!-- PANTALLA 2: ESTACIÓN DE ARMADO ARCADE / REALISTA -->
+    <!-- PANTALLA 2: ESTACIÓN DE ARMADO ARCADE / REALISTA (ESTILO SEGUNDA IMAGEN) -->
     <main id="pantalla-armar-burguer" class="hidden max-w-7xl w-full mx-auto px-4 py-8 flex-grow relative z-10 space-y-6">
         <button onclick="irAPantallaVitrina()" class="flex items-center gap-2 text-xs font-futurista uppercase tracking-widest text-stone-400 hover:text-amber-400 font-bold cursor-pointer transition-colors">
             <i data-lucide="arrow-left" class="w-4 h-4"></i> Volver al Menú
@@ -94,38 +95,38 @@
 
         <div class="bg-stone-950/90 border border-amber-500/20 p-6 rounded-3xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center shadow-2xl">
             
-            <!-- Columna Izquierda: Visor Gráfico Estilo Juego con Plato Base -->
-            <div class="lg:col-span-6 flex flex-col items-center justify-center bg-stone-900/40 border border-stone-800 rounded-2xl p-6 relative min-h-[460px] overflow-hidden">
+            <!-- Columna Izquierda: Visor Gráfico Estilo Juego con Plato Blanco y Rojo -->
+            <div class="lg:col-span-6 flex flex-col items-center justify-center bg-gradient-to-b from-stone-900/60 to-stone-950/80 border border-stone-800 rounded-2xl p-6 relative min-h-[500px] overflow-hidden">
                 <div class="absolute top-4 left-4 bg-stone-900/90 border border-stone-800 px-3 py-1.5 rounded-lg flex items-center gap-2 z-10">
                     <i data-lucide="gamepad-2" class="w-4 h-4 text-amber-400"></i>
-                    <span class="text-[10px] font-futurista font-black uppercase text-amber-400">Estación Visual Arcade</span>
+                    <span class="text-[10px] font-futurista font-black uppercase text-amber-400">Simulador de Cocina Arcade</span>
                 </div>
 
-                <!-- Contenedor del Plato y la Hamburguesa Apilada -->
-                <div class="w-full flex flex-col items-center justify-end my-auto pt-10 pb-4">
+                <!-- Contenedor del Plato y la Hamburguesa Apilada Realista -->
+                <div class="w-full flex flex-col items-center justify-end my-auto pt-12 pb-4">
                     <div id="visor-capas-arcade" class="flex flex-col-reverse items-center justify-center w-full transition-all">
-                        <!-- Las capas se apilan aquí dinámicamente -->
+                        <!-- Las capas se apilan aquí dinámicamente con alto nivel de detalle -->
                     </div>
-                    <!-- Plato Base Fiel a la Imagen -->
-                    <div class="w-72 h-6 bg-gradient-to-r from-stone-300 via-white to-stone-400 rounded-full border border-stone-500 shadow-2xl mt-1 flex items-center justify-center">
-                        <div class="w-64 h-2 bg-stone-200/80 rounded-full"></div>
+                    <!-- Plato Blanco con Borde Rojo idéntico al juego -->
+                    <div class="w-76 h-7 bg-gradient-to-r from-stone-100 via-white to-stone-300 rounded-full border-2 border-red-600 shadow-2xl mt-1.5 flex items-center justify-center relative">
+                        <div class="w-68 h-2.5 bg-stone-200/90 rounded-full border border-red-500/30"></div>
                     </div>
                 </div>
 
                 <div class="absolute bottom-4 right-4 bg-stone-950/95 border border-amber-500/30 px-4 py-2 rounded-xl text-right z-10">
-                    <span class="text-[9px] uppercase tracking-widest text-stone-400 block font-futurista">Total Ingredientes</span>
+                    <span class="text-[9px] uppercase tracking-widest text-stone-400 block font-futurista">Precio Total Ingredientes</span>
                     <span id="burger-precio-total" class="text-xl font-mono text-amber-400 font-black">$3.00</span>
                 </div>
             </div>
 
-            <!-- Columna Derecha: Controles de Ingredientes por Capas -->
+            <!-- Columna Derecha: Controles de Ingredientes -->
             <div class="lg:col-span-6 space-y-6">
                 <div>
                     <h2 class="text-2xl font-black font-futurista text-white uppercase tracking-wider">Arma tu Hamburguesa</h2>
-                    <p class="text-xs text-amber-500/70 uppercase tracking-widest font-bold mt-1">Selecciona los ingredientes para armarla exactamente como en el juego</p>
+                    <p class="text-xs text-amber-500/70 uppercase tracking-widest font-bold mt-1">Selecciona los ingredientes para formar la torre perfecta</p>
                 </div>
 
-                <div class="space-y-3 max-h-[340px] overflow-y-auto pr-2" id="lista-opciones-capas">
+                <div class="space-y-3 max-h-[360px] overflow-y-auto pr-2" id="lista-opciones-capas">
                     <!-- Generado por JavaScript -->
                 </div>
 
@@ -249,43 +250,43 @@
         let productoSeleccionado = null, filtroInstagram = "luxury_store";
         let fotoSeleccionadaParaLightbox = "";
 
-        // Capas realistas texturizadas estilo juego arcade de hamburguesas
+        // Catálogo de capas con diseño visual altamente detallado y realista estilo videojuego
         const catalogoCapasBurger = [
             { 
                 id: 'carne', 
                 nombre: 'Carne jugosa a la parrilla', 
                 precio: 2.00, 
-                htmlCapa: '<div class="capa-arcade h-10 bg-gradient-to-r from-stone-900 via-amber-950 to-stone-900 rounded-xl border border-stone-800 flex items-center justify-center text-[10px] font-bold text-amber-100 shadow-xl">🥩 Carne Jugosa a la Parrilla</div>' 
+                htmlCapa: '<div class="capa-arcade h-11 bg-gradient-to-r from-stone-950 via-amber-950 to-stone-900 rounded-2xl border-b-4 border-stone-900 flex items-center justify-center text-[10px] font-black text-amber-100 shadow-2xl">🥩 Carne Jugosa a la Parrilla (Doble Grosor)</div>' 
             },
             { 
                 id: 'queso', 
                 nombre: 'Queso Cheddar fundido', 
                 precio: 1.00, 
-                htmlCapa: '<div class="capa-arcade h-5 bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 rounded-md border-b-2 border-amber-600 flex items-center justify-center text-[9px] font-black text-black shadow-md" style="clip-path: polygon(0 0, 100% 0, 95% 100%, 5% 100%);">🧀 Queso Cheddar Fundido</div>' 
+                htmlCapa: '<div class="capa-arcade h-6 bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 rounded-md border-b-2 border-amber-600 flex items-center justify-center text-[9px] font-black text-black shadow-lg" style="clip-path: polygon(2% 0%, 98% 0%, 100% 100%, 0% 100%);">🧀 Queso Cheddar Fundido Desbordante</div>' 
             },
             { 
                 id: 'tocineta', 
                 nombre: 'Tocineta crujiente', 
                 precio: 1.50, 
-                htmlCapa: '<div class="capa-arcade h-4 bg-gradient-to-r from-amber-800 via-red-950 to-amber-900 rounded-sm flex items-center justify-center text-[8px] font-bold text-amber-200">🥓 Tocineta Crujiente</div>' 
+                htmlCapa: '<div class="capa-arcade h-5 bg-gradient-to-r from-amber-900 via-red-950 to-amber-950 rounded-md flex items-center justify-center text-[8px] font-bold text-amber-200">🥓 Tiras de Tocineta Ahumada Crujiente</div>' 
             },
             { 
                 id: 'tomate', 
                 nombre: 'Rodajas de tomate fresco', 
                 precio: 0.50, 
-                htmlCapa: '<div class="capa-arcade h-4 bg-gradient-to-r from-red-600 via-red-500 to-red-700 rounded-full flex items-center justify-center text-[8px] font-bold text-white shadow-inner">🍅 Rodajas de Tomate Fresco</div>' 
+                htmlCapa: '<div class="capa-arcade h-5 bg-gradient-to-r from-red-600 via-red-500 to-red-700 rounded-full flex items-center justify-center text-[8px] font-bold text-white shadow-inner">🍅 Rodajas de Tomate Fresco en Círculo</div>' 
             },
             { 
                 id: 'lechuga', 
                 nombre: 'Lechuga rizada gigante', 
                 precio: 0.50, 
-                htmlCapa: '<div class="capa-arcade h-8 bg-gradient-to-r from-emerald-600 via-emerald-500 to-green-700 rounded-2xl border border-emerald-400 flex items-center justify-center text-[9px] font-bold text-white shadow-lg transform -rotate-1">🥬 Lechuga Rizada Gigante</div>' 
+                htmlCapa: '<div class="capa-arcade h-9 bg-gradient-to-r from-emerald-600 via-green-500 to-emerald-700 rounded-3xl border-2 border-emerald-400 flex items-center justify-center text-[9px] font-black text-white shadow-xl transform -rotate-1">🥬 Lechuga Rizada Gigante Volumétrica</div>' 
             },
             { 
                 id: 'salsas', 
                 nombre: 'Salsas especiales (Ketchup y Mostaza)', 
                 precio: 0.40, 
-                htmlCapa: '<div class="capa-arcade h-3 bg-gradient-to-r from-red-700 via-yellow-500 to-red-800 rounded-md flex items-center justify-center text-[8px] font-black text-black">🟡🔴 Salsas Especiales de la Casa</div>' 
+                htmlCapa: '<div class="capa-arcade h-4 bg-gradient-to-r from-red-700 via-yellow-500 to-red-800 rounded-lg flex items-center justify-center text-[8px] font-black text-black shadow-md">🟡🔴 Salsas Especiales de la Casa</div>' 
             }
         ];
 
@@ -357,19 +358,19 @@
             const txtPrecio = document.getElementById('burger-precio-total');
             if(!visor || !txtPrecio) return;
 
-            // 1. Pan inferior base
-            let htmlCapas = '<div class="capa-arcade h-9 bg-gradient-to-r from-amber-600 via-amber-500 to-amber-700 rounded-b-3xl border-2 border-amber-800 flex items-center justify-center text-[10px] font-bold text-stone-950 shadow-md">🍞 Pan Inferior Esponjoso</div>';
+            // 1. Pan inferior esponjoso grande base
+            let htmlCapas = '<div class="capa-arcade h-10 bg-gradient-to-r from-amber-600 via-amber-500 to-amber-700 rounded-b-3xl border-2 border-amber-800 flex items-center justify-center text-[10px] font-bold text-stone-950 shadow-xl">🍞 Pan Inferior Esponjoso</div>';
             
             let totalActual = burgerPersonalizadaSeleccionada.precioBase;
             
-            // 2. Capas seleccionadas por el usuario
+            // 2. Capas seleccionadas ordenadas dinámicamente
             burgerPersonalizadaSeleccionada.capas.forEach(c => {
                 htmlCapas += c.htmlCapa;
                 totalActual += c.precio;
             });
 
-            // 3. Pan superior con semillas / ajonjolí (siempre arriba)
-            htmlCapas += '<div class="capa-arcade h-14 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600 rounded-t-[40px] border-2 border-amber-700 flex items-center justify-center text-[10px] font-bold text-stone-950 shadow-xl relative"><span class="absolute text-[8px] text-amber-200 top-2">✨ • . • ✨</span>🍞 Pan Superior con Ajonjolí</div>';
+            // 3. Pan superior abombado gigante con semillas de ajonjolí idéntico al juego
+            htmlCapas += '<div class="capa-arcade h-16 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600 rounded-t-[50px] border-2 border-amber-700 flex items-center justify-center text-[10px] font-black text-stone-950 shadow-2xl relative"><span class="absolute text-[9px] text-amber-200 font-bold top-2">✨ • . • ✨ • . • ✨</span>🍞 Pan Superior Abombado con Ajonjolí</div>';
 
             visor.innerHTML = htmlCapas;
             txtPrecio.innerText = `$${totalActual.toFixed(2)}`;
@@ -576,7 +577,7 @@
             if(cuenta.banco)   htmlDetalles += `<div><span class="text-amber-400/70 text-[10px] uppercase font-bold block">Banco / Plataforma:</span> <span class="text-white font-bold text-sm">${cuenta.banco}</span></div>`;
             if(cuenta.titular)  htmlDetalles += `<div class="mt-1"><span class="text-amber-400/70 text-[10px] uppercase font-bold block">Titular:</span> <span class="text-stone-200">${cuenta.titular}</span></div>`;
             if(cuenta.ci)       htmlDetalles += `<div class="mt-1"><span class="text-amber-400/70 text-[10px] uppercase font-bold block">CI / RIF:</span> <span class="text-stone-200 font-bold tracking-wider">${cuenta.ci}</span></div>`;
-            if(cuenta.telefono) htmlDetalles += `<div class="mt-1"><span class="text-amber-400/70 text-[10px] uppercase font-bold block">Teléfono:</span> <span class="text-stone-200">${cuenta.telefono}</span></div>`;
+            if(cuenta.telefono) htmlDetalles += `<div class="mt-1"><span class="text-amber-400/70 text-[10px] uppercase font-bold block">Teléfono:</span> <span class="text-stone-200 font-bold tracking-wider">${cuenta.telefono}</span></div>`;
             if(cuenta.email)    htmlDetalles += `<div class="mt-1"><span class="text-amber-400/70 text-[10px] uppercase font-bold block">Email:</span> <span class="text-stone-200 break-all">${cuenta.email}</span></div>`;
             if(cuenta.detalles) htmlDetalles += `<div class="mt-1 border-t border-stone-800 pt-1.5 text-[11px] text-stone-400 italic">${cuenta.detalles}</div>`;
             
