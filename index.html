@@ -101,7 +101,7 @@
                 </div>
             </div>
 
-            <!-- Panel Lateral de Ingredientes (Arrastrables y Pila con Botón X) -->
+            <!-- Panel Lateral de Ingredientes -->
             <div class="lg:col-span-5 space-y-5">
                 <div class="glass-panel p-6 rounded-3xl space-y-4">
                     <div>
@@ -110,9 +110,7 @@
                     </div>
 
                     <!-- Bandeja de Ingredientes Arrastrables -->
-                    <div class="grid grid-cols-2 gap-3" id="bandeja-ingredientes-arrastrables">
-                        <!-- Generado dinámicamente con JS -->
-                    </div>
+                    <div class="grid grid-cols-2 gap-3" id="bandeja-ingredientes-arrastrables"></div>
                 </div>
 
                 <!-- Lista de Capas Actuales con opción de eliminar (X) -->
@@ -167,11 +165,10 @@
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZjeW1mc3B5d2phYm5iZGRicnVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ2Njg1MjIsImV4cCI6MjEwMDI0NDUyMn0.bXamCrThn-oGgK_6Ol2w3cSoxUd0pJDHW0_UkPqGEuA"; 
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        let productosDB = [], cuentasDB = [], carrito = [];
-        let capasActuales = []; // Pila activa con múltiples carnes, lechuga, etc.
+        let carrito = [];
+        let capasActuales = []; 
         const precioBasePan = 1.50;
 
-        // Catálogo de ingredientes 3D fotorrealistas con texturas modeladas
         const catalogoIngredientes3D = [
             { id: 'carne', nombre: 'Carne a la Parrilla', precio: 2.00, color: 0x3d1c02, tipo: 'cilindro' },
             { id: 'queso', nombre: 'Queso Cheddar Fundido', precio: 1.00, color: 0xffaa00, tipo: 'slab' },
@@ -181,14 +178,16 @@
             { id: 'salsas', nombre: 'Salsas Especiales', precio: 0.40, color: 0xd4ac0d, tipo: 'salsa' }
         ];
 
-        // Variables para Three.js
         let scene, camera, renderer, hamburguesaGrupo;
 
         function cambiarPantalla(nombre) {
             ['vitrina', 'simulador3d', 'carrito'].forEach(v => {
-                document.getElementById(`vista-${v}`).classList.add('hidden');
+                const el = document.getElementById(`vista-${v}`);
+                if(el) el.classList.add('hidden');
             });
-            document.getElementById(`vista-${nombre}`).classList.remove('hidden');
+            const target = document.getElementById(`vista-${nombre}`);
+            if(target) target.classList.remove('hidden');
+
             if (nombre === 'simulador3d') {
                 setTimeout(() => {
                     if (!scene) inicializarThreeJS();
@@ -201,12 +200,13 @@
                 cargarCuentasPago();
             }
             window.scrollTo({ top: 0, behavior: 'smooth' });
+            setTimeout(() => lucide.createIcons(), 50);
         }
 
-        // Inicializar Motor 3D Real con Three.js
         function inicializarThreeJS() {
             const container = document.getElementById('webgl-container');
             if(!container) return;
+            container.innerHTML = ""; // Limpiar contenedor previo si existiera
 
             scene = new THREE.Scene();
             camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 1000);
@@ -218,22 +218,14 @@
             renderer.setPixelRatio(window.devicePixelRatio);
             container.appendChild(renderer.domElement);
 
-            // Iluminación Profesional Studio PBR
-            const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
-            scene.add(ambientLight);
-
+            scene.add(new THREE.AmbientLight(0xffffff, 1.2));
             const dirLight = new THREE.DirectionalLight(0xfffaed, 2.0);
             dirLight.position.set(5, 10, 7);
             scene.add(dirLight);
 
-            const pointLight = new THREE.PointLight(0xe5c158, 1.5, 50);
-            pointLight.position.set(-5, 3, -5);
-            scene.add(pointLight);
-
             hamburguesaGrupo = new THREE.Group();
             scene.add(hamburguesaGrupo);
 
-            // Control de rotación con el mouse tipo Orbit simple
             let isDragging = false;
             let previousMousePosition = { x: 0, y: 0 };
 
@@ -256,7 +248,6 @@
             }
         }
 
-        // Renderizar la bandeja lateral con soporte Drag and Drop y Clic
         function renderizarBandejaIngredientes() {
             const contenedor = document.getElementById('bandeja-ingredientes-arrastrables');
             if(!contenedor) return;
@@ -273,7 +264,6 @@
             });
             lucide.createIcons();
 
-            // Configurar Zona Drop
             const zonaDrop = document.getElementById('zona-drop-canvas');
             if(zonaDrop) {
                 zonaDrop.ondragover = (e) => e.preventDefault();
@@ -288,7 +278,7 @@
         function agregarCapa(id) {
             const ing = catalogoIngredientes3D.find(i => i.id === id);
             if(ing) {
-                capasActuales.push({ ...ing, uuid: Math.random().toString(36.substring(2, 9)) });
+                capasActuales.push({ ...ing, uuid: Math.random().toString(36).substring(2, 9) });
                 actualizarEscena3D();
                 renderizarListaCapasActivas();
             }
@@ -306,7 +296,6 @@
             renderizarListaCapasActivas();
         }
 
-        // Renderizar la lista de capas con botón X
         function renderizarListaCapasActivas() {
             const contenedor = document.getElementById('lista-capas-activas-pila');
             if(!contenedor) return;
@@ -329,7 +318,7 @@
                         </div>
                         <div class="flex items-center gap-3">
                             <span class="font-mono text-amber-400">+$${capa.precio.toFixed(2)}</span>
-                            <button onclick="eliminarCapaPorUuid('${capa.uuid}')" class="w-5 h-5 bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white rounded-md flex items-center justify-center transition-colors font-bold text-[10px]">✕</button>
+                            <button onclick="eliminarCapaPorUuid('${capa.uuid}')" class="w-5 h-5 bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white rounded-md flex items-center justify-center transition-colors font-bold text-[10px] cursor-pointer">✕</button>
                         </div>
                     </div>`;
             });
@@ -338,18 +327,15 @@
             window.precioFinal3D = total;
         }
 
-        // Reconstruir la geometría 3D en Three.js con capas reales y tomates rebanados 3D
         function actualizarEscena3D() {
             if(!hamburguesaGrupo) return;
 
-            // Limpiar grupo anterior
             while(hamburguesaGrupo.children.length > 0){ 
                 hamburguesaGrupo.remove(hamburguesaGrupo.children[0]); 
             }
 
             let alturaActualY = -2.2;
 
-            // 1. Pan Base Inferior (Cylinder 3D)
             const panBaseGeo = new THREE.CylinderGeometry(2.2, 2.4, 0.6, 32);
             const panMaterial = new THREE.MeshStandardMaterial({ color: 0xd9822b, roughness: 0.6 });
             const panBaseMesh = new THREE.Mesh(panBaseGeo, panMaterial);
@@ -357,28 +343,23 @@
             hamburguesaGrupo.add(panBaseMesh);
             alturaActualY += 0.5;
 
-            // 2. Apilar dinámicamente cada ingrediente real en 3D
             capasActuales.forEach((capa) => {
                 let meshCapa;
                 const matCapa = new THREE.MeshStandardMaterial({ color: capa.color, roughness: 0.4 });
 
                 if (capa.tipo === 'cilindro') {
-                    // Carne a la parrilla gruesa 3D
                     const geo = new THREE.CylinderGeometry(2.1, 2.1, 0.45, 32);
                     meshCapa = new THREE.Mesh(geo, matCapa);
                     alturaActualY += 0.35;
                 } else if (capa.tipo === 'slab') {
-                    // Queso Cheddar fundido (forma cuadrada redondeada o disco)
                     const geo = new THREE.BoxGeometry(3.2, 0.15, 3.2);
                     meshCapa = new THREE.Mesh(geo, matCapa);
                     alturaActualY += 0.2;
                 } else if (capa.tipo === 'tira') {
-                    // Tocineta
                     const geo = new THREE.BoxGeometry(2.8, 0.1, 1.2);
                     meshCapa = new THREE.Mesh(geo, matCapa);
                     alturaActualY += 0.15;
                 } else if (capa.tipo === 'rodaja') {
-                    // Tomates rebanados 3D (pequeños discos distribuidos)
                     const grupoTomates = new THREE.Group();
                     for(let i=0; i<3; i++) {
                         const geoT = new THREE.CylinderGeometry(0.8, 0.8, 0.15, 16);
@@ -390,12 +371,10 @@
                     meshCapa = grupoTomates;
                     alturaActualY += 0.2;
                 } else if (capa.tipo === 'hoja') {
-                    // Lechuga rizada (plano ondulado)
                     const geo = new THREE.CylinderGeometry(2.4, 2.4, 0.2, 16);
                     meshCapa = new THREE.Mesh(geo, matCapa);
                     alturaActualY += 0.2;
                 } else {
-                    // Salsas
                     const geo = new THREE.CylinderGeometry(2.0, 2.0, 0.1, 16);
                     meshCapa = new THREE.Mesh(geo, matCapa);
                     alturaActualY += 0.1;
@@ -406,7 +385,6 @@
                 alturaActualY += 0.2;
             });
 
-            // 3. Pan Superior con Ajonjolí (Domo 3D)
             const panSupGeo = new THREE.SphereGeometry(2.2, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2);
             const panSupMesh = new THREE.Mesh(panSupGeo, panMaterial);
             panSupMesh.scale.set(1, 0.7, 1);
@@ -432,28 +410,43 @@
         }
 
         async function cargarCatalogoSupabase() {
-            const { data } = await supabaseClient.from('productos').select('*').eq('instagram_dueno', 'luxury_store');
-            if(data) {
-                productosDB = data;
-                const grid = document.getElementById('grid-productos-vitrina');
-                if(!grid) return;
+            const grid = document.getElementById('grid-productos-vitrina');
+            if(!grid) return;
+
+            // Traer todos los productos sin restricciones estrictas para asegurar que carguen tus datos
+            const { data, error } = await supabaseClient.from('productos').select('*');
+            
+            if(error) {
+                console.error("Error al cargar productos:", error);
+                grid.innerHTML = `<div class="col-span-3 text-center text-red-400 font-mono text-xs">Error al conectar con la base de datos.</div>`;
+                return;
+            }
+
+            if(data && data.length > 0) {
                 grid.innerHTML = "";
-                productosDB.forEach(p => {
+                data.forEach(p => {
+                    const titulo = p.titulo || p.nombre || "Producto sin nombre";
+                    const precio = parseFloat(p.precio || p.valor || 0);
+                    const imagen = p.imagen_url || p.imagen || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600';
+
                     grid.innerHTML += `
                         <div class="glass-panel rounded-3xl overflow-hidden border border-stone-800 flex flex-col justify-between shadow-xl">
                             <div class="aspect-video bg-stone-950 overflow-hidden">
-                                <img src="${p.imagen_url || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600'}" class="w-full h-full object-cover">
+                                <img src="${imagen}" class="w-full h-full object-cover">
                             </div>
                             <div class="p-5 space-y-3">
-                                <h3 class="font-futurista font-bold text-xs text-white uppercase">${p.titulo}</h3>
+                                <h3 class="font-futurista font-bold text-xs text-white uppercase">${titulo}</h3>
                                 <div class="flex justify-between items-center pt-2 border-t border-stone-900">
-                                    <span class="font-mono text-xs text-amber-400 font-bold">$${parseFloat(p.precio).toFixed(2)}</span>
-                                    <button onclick="agregarDirectoVitrina('${p.titulo}', ${p.precio}, '${p.imagen_url}')" class="bg-amber-400 hover:bg-amber-300 text-black px-4 py-2 rounded-xl text-[10px] font-futurista font-black uppercase cursor-pointer">Añadir</button>
+                                    <span class="font-mono text-xs text-amber-400 font-bold">$${precio.toFixed(2)}</span>
+                                    <button onclick="agregarDirectoVitrina('${titulo.replace(/'/g, "")}', ${precio}, '${imagen}')" class="bg-amber-400 hover:bg-amber-300 text-black px-4 py-2 rounded-xl text-[10px] font-futurista font-black uppercase cursor-pointer">Añadir</button>
                                 </div>
                             </div>
                         </div>`;
                 });
+            } else {
+                grid.innerHTML = `<div class="col-span-3 text-center text-stone-500 font-mono text-xs">No se encontraron productos registrados en Supabase.</div>`;
             }
+            lucide.createIcons();
         }
 
         function agregarDirectoVitrina(titulo, precio, imagen_url) {
@@ -480,7 +473,7 @@
                             <img src="${item.imagen_url}" class="w-12 h-12 object-cover rounded-xl">
                             <div>
                                 <h4 class="text-xs font-bold text-white font-futurista uppercase">${item.titulo}</h4>
-                                <button onclick="carrito.splice(${idx},1);renderizarCarrito();document.getElementById('contador-carrito-badge').innerText=carrito.length;" class="text-[10px] text-red-400 hover:underline">Eliminar</button>
+                                <button onclick="carrito.splice(${idx},1);renderizarCarrito();document.getElementById('contador-carrito-badge').innerText=carrito.length;" class="text-[10px] text-red-400 hover:underline cursor-pointer">Eliminar</button>
                             </div>
                         </div>
                         <span class="font-mono text-amber-400 font-bold">$${item.precio.toFixed(2)}</span>
@@ -494,11 +487,11 @@
             if(!sel) return;
             const { data } = await supabaseClient.from('cuentas_pago').select('*');
             if(data) {
-                cuentasDB = data;
                 sel.innerHTML = "<option value=''>-- Seleccionar Método --</option>";
-                cuentasDB.forEach((c, i) => {
+                data.forEach((c, i) => {
                     sel.innerHTML += `<option value="${i}">[${c.plataforma}] ${c.banco || ''}</option>`;
                 });
+                window.cuentasDB = data;
             }
         }
 
@@ -506,8 +499,8 @@
             const idx = document.getElementById('select-metodo-pago').value;
             const caja = document.getElementById('caja-banco-detalle');
             if(!caja) return;
-            if(idx === "" || !cuentasDB[idx]) { caja.classList.add('hidden'); return; }
-            const c = cuentasDB[idx];
+            if(idx === "" || !window.cuentasDB || !window.cuentasDB[idx]) { caja.classList.add('hidden'); return; }
+            const c = window.cuentasDB[idx];
             caja.classList.remove('hidden');
             caja.innerHTML = `<div><b>Banco:</b> ${c.banco}</div><div><b>Titular:</b> ${c.titular}</div><div><b>CI/RIF:</b> ${c.ci}</div><div><b>Teléfono:</b> ${c.telefono}</div>`;
         }
@@ -517,16 +510,16 @@
             const ref = document.getElementById('input-ref-pago').value.trim();
             const idx = document.getElementById('select-metodo-pago').value;
 
-            if(idx === "" || !cuentasDB[idx]) { alert("Selecciona método de pago."); return; }
+            if(idx === "" || !window.cuentasDB || !window.cuentasDB[idx]) { alert("Selecciona método de pago."); return; }
             if(!/^\d{12}$/.test(ref)) { alert("Inserta un número de referencia válido de exactamente 12 dígitos."); return; }
 
-            const cuenta = cuentasDB[idx];
+            const cuenta = window.cuentasDB[idx];
             let total = carrito.reduce((a, b) => a + b.precio, 0);
             let lista = carrito.map(i => `• ${i.titulo} ($${i.precio.toFixed(2)})`).join('\n');
 
             let wsNum = "584120000000";
             const { data } = await supabaseClient.from('ajustes_sistema').select('valor').eq('id', 'whatsapp_notificaciones').single();
-            if(data) wsNum = data.valor.replace(/[^0-9]/g, "");
+            if(data && data.valor) wsNum = data.valor.replace(/[^0-9]/g, "");
 
             const mensaje = `🍔 *PEDIDO 3D REAL - PIZZA PLANETA* 🍔\n\n${lista}\n\n💵 *TOTAL:* $${total.toFixed(2)}\n🏦 *PAGO:* ${cuenta.plataforma} (${cuenta.banco})\n🔢 *REF:* ${ref}`;
 
