@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PIZZA PLANETA - Simulador 3D Real & Drag and Drop</title>
+    <title>PIZZA PLANETA - Studio 3D</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -40,9 +40,6 @@
             </div>
 
             <div class="flex items-center gap-3">
-                <button onclick="cambiarPantalla('simulador3d')" class="bg-gradient-to-r from-amber-500/20 to-amber-600/20 border border-amber-500/40 text-amber-400 px-4 py-2.5 rounded-xl text-xs font-futurista font-black uppercase tracking-wider flex items-center gap-2 hover:bg-amber-500 hover:text-black transition-all cursor-pointer">
-                    <i data-lucide="play" class="w-4 h-4"></i> Simulador 3D Real
-                </button>
                 <button onclick="cambiarPantalla('carrito')" class="bg-stone-900 border border-amber-500/30 p-2.5 rounded-xl flex items-center gap-2 cursor-pointer hover:border-amber-500/60">
                     <i data-lucide="shopping-cart" class="w-4 h-4 text-amber-400"></i>
                     <span id="contador-carrito-badge" class="bg-amber-500 text-black font-mono text-[10px] font-black px-1.5 py-0.5 rounded-md">0</span>
@@ -57,10 +54,10 @@
             <div class="space-y-2">
                 <span class="text-[10px] text-amber-400 font-futurista font-bold uppercase tracking-widest bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">Motor Gráfico WebGL Activo</span>
                 <h2 class="text-2xl md:text-3xl font-black text-white font-futurista tracking-wider uppercase">Crea tu Hamburguesa en 3D Real</h2>
-                <p class="text-xs text-stone-400 max-w-xl">Arrastra y suelta múltiples carnes jugosas, tomates rebanados en 3D, queso fundido y aderezos ilimitados directo en la barra de cocina.</p>
+                <p class="text-xs text-stone-400 max-w-xl">Arrastra y suelta ingredientes directo en la estación de cocina con soporte WebGL en tiempo real.</p>
             </div>
             <button onclick="cambiarPantalla('simulador3d')" class="bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-black font-futurista font-black px-8 py-4 rounded-2xl text-xs uppercase tracking-widest flex items-center gap-3 shadow-xl cursor-pointer shrink-0">
-                <i data-lucide="sparkles" class="w-5 h-5"></i> Iniciar Experiencia 3D
+                <i data-lucide="sparkles" class="w-5 h-5"></i> Crear Hamburguesa🍔
             </button>
         </div>
         <div id="grid-productos-vitrina" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
@@ -80,16 +77,14 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             
-            <!-- Lienzo 3D Real (Three.js Canvas + Zona Drop) -->
+            <!-- Lienzo 3D Real -->
             <div class="lg:col-span-7 bg-stone-950/90 border border-stone-800 rounded-3xl p-6 flex flex-col items-center justify-between min-h-[580px] relative overflow-hidden shadow-2xl" id="zona-drop-canvas">
                 <div class="absolute top-4 left-4 bg-black/80 border border-stone-800 px-3 py-1.5 rounded-xl z-20 backdrop-blur-md">
                     <span class="text-[9px] font-futurista text-amber-400 uppercase tracking-widest">Render 3D en Tiempo Real</span>
                 </div>
 
-                <!-- Visor Three.js -->
                 <div id="webgl-container" class="w-full h-[400px] flex items-center justify-center cursor-grab active:cursor-grabbing"></div>
 
-                <!-- Barra Inferior de Control de la Hamburguesa 3D -->
                 <div class="w-full flex justify-between items-center bg-stone-900/90 border border-stone-800/80 p-4 rounded-2xl z-20 backdrop-blur-md">
                     <div>
                         <span class="text-[9px] uppercase tracking-widest text-stone-400 block font-futurista">Valor Total de la Creación</span>
@@ -101,19 +96,19 @@
                 </div>
             </div>
 
-            <!-- Panel Lateral de Ingredientes -->
+            <!-- Panel Lateral de Ingredientes (Cargado desde Supabase) -->
             <div class="lg:col-span-5 space-y-5">
                 <div class="glass-panel p-6 rounded-3xl space-y-4">
                     <div>
-                        <h3 class="text-lg font-black font-futurista text-white uppercase tracking-wide">Ingredientes 3D (Arrastra o haz Clic)</h3>
-                        <p class="text-xs text-amber-500/70 font-bold uppercase tracking-wider mt-1">Puedes agregar cuantas veces quieras</p>
+                        <h3 class="text-lg font-black font-futurista text-white uppercase tracking-wide">Ingredientes 3D (Desde Supabase)</h3>
+                        <p class="text-xs text-amber-500/70 font-bold uppercase tracking-wider mt-1">Arrastra o haz clic para agregar</p>
                     </div>
 
-                    <!-- Bandeja de Ingredientes Arrastrables con Imagen -->
-                    <div class="grid grid-cols-2 gap-3" id="bandeja-ingredientes-arrastrables"></div>
+                    <div class="grid grid-cols-2 gap-3 max-h-[320px] overflow-y-auto pr-1" id="bandeja-ingredientes-arrastrables">
+                        <div class="text-xs text-stone-500 text-center py-6 col-span-2 font-mono">Cargando ingredientes...</div>
+                    </div>
                 </div>
 
-                <!-- Lista de Capas Actuales con opción de eliminar (X) -->
                 <div class="glass-panel p-6 rounded-3xl space-y-3">
                     <div class="flex justify-between items-center border-b border-stone-800 pb-2">
                         <h4 class="text-xs font-black font-futurista text-stone-300 uppercase tracking-widest">Capas en la Hamburguesa</h4>
@@ -167,16 +162,8 @@
 
         let carrito = [];
         let capasActuales = []; 
+        let catalogoIngredientes3D = [];
         const precioBasePan = 1.50;
-
-        const catalogoIngredientes3D = [
-            { id: 'carne', nombre: 'Carne a la Parrilla', precio: 2.00, color: 0x3d1c02, tipo: 'cilindro', imagen: 'https://images.unsplash.com/photo-1586190848861-99aa4a171e90?q=80&w=300' },
-            { id: 'queso', nombre: 'Queso Cheddar Fundido', precio: 1.00, color: 0xffaa00, tipo: 'slab', imagen: 'https://images.unsplash.com/photo-1631379578550-7038263db699?q=80&w=300' },
-            { id: 'tocineta', nombre: 'Tocineta Crujiente', precio: 1.50, color: 0x5c1d1d, tipo: 'tira', imagen: 'https://images.unsplash.com/photo-1607305387299-a3d9611cd469?q=80&w=300' },
-            { id: 'tomate', nombre: 'Tomate Rebanado 3D', precio: 0.50, color: 0xcc2200, tipo: 'rodaja', imagen: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?q=80&w=300' },
-            { id: 'lechuga', nombre: 'Lechuga Rizada', precio: 0.50, color: 0x22aa33, tipo: 'hoja', imagen: 'https://images.unsplash.com/photo-1622206151226-18ca2c4ab4a1?q=80&w=300' },
-            { id: 'salsas', nombre: 'Salsas Especiales', precio: 0.40, color: 0xd4ac0d, tipo: 'salsa', imagen: 'https://images.unsplash.com/photo-1472476443507-c7a5948773fc?q=80&w=300' }
-        ];
 
         let scene, camera, renderer, hamburguesaGrupo;
 
@@ -189,9 +176,9 @@
             if(target) target.classList.remove('hidden');
 
             if (nombre === 'simulador3d') {
-                setTimeout(() => {
+                setTimeout(async () => {
                     if (!scene) inicializarThreeJS();
-                    renderizarBandejaIngredientes();
+                    await cargarIngredientesDesdeSupabase();
                     actualizarEscena3D();
                 }, 100);
             }
@@ -201,6 +188,33 @@
             }
             window.scrollTo({ top: 0, behavior: 'smooth' });
             setTimeout(() => lucide.createIcons(), 50);
+        }
+
+        async function cargarIngredientesDesdeSupabase() {
+            // Nota: puedes cambiar 'ingredientes_3d' por el nombre exacto de tu tabla en Supabase
+            const { data, error } = await supabaseClient.from('ingredientes_3d').select('*');
+            
+            if (error || !data || data.length === 0) {
+                // Datos de respaldo por si la tabla aún está vacía o en proceso de creación
+                catalogoIngredientes3D = [
+                    { id: 'carne', nombre: 'Carne a la Parrilla', precio: 2.00, color: '#3d1c02', tipo: 'cilindro', imagen_url: 'https://images.unsplash.com/photo-1586190848861-99aa4a171e90?q=80&w=300' },
+                    { id: 'queso', nombre: 'Queso Cheddar Fundido', precio: 1.00, color: '#ffaa00', tipo: 'slab', imagen_url: 'https://images.unsplash.com/photo-1631379578550-7038263db699?q=80&w=300' },
+                    { id: 'tocineta', nombre: 'Tocineta Crujiente', precio: 1.50, color: '#5c1d1d', tipo: 'tira', imagen_url: 'https://images.unsplash.com/photo-1607305387299-a3d9611cd469?q=80&w=300' },
+                    { id: 'tomate', nombre: 'Tomate Rebanado 3D', precio: 0.50, color: '#cc2200', tipo: 'rodaja', imagen_url: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?q=80&w=300' },
+                    { id: 'lechuga', nombre: 'Lechuga Rizada', precio: 0.50, color: '#22aa33', tipo: 'hoja', imagen_url: 'https://images.unsplash.com/photo-1622206151226-18ca2c4ab4a1?q=80&w=300' },
+                    { id: 'salsas', nombre: 'Salsas Especiales', precio: 0.40, color: '#d4ac0d', tipo: 'salsa', imagen_url: 'https://images.unsplash.com/photo-1472476443507-c7a5948773fc?q=80&w=300' }
+                ];
+            } else {
+                catalogoIngredientes3D = data.map(item => ({
+                    id: item.id || item.codigo || item.nombre,
+                    nombre: item.nombre || item.titulo,
+                    precio: parseFloat(item.precio || item.valor || 0),
+                    color: item.color || '#3d1c02',
+                    tipo: item.tipo || 'cilindro',
+                    imagen_url: item.imagen_url || item.imagen || ''
+                }));
+            }
+            renderizarBandejaIngredientes();
         }
 
         function inicializarThreeJS() {
@@ -252,11 +266,12 @@
             const contenedor = document.getElementById('bandeja-ingredientes-arrastrables');
             if(!contenedor) return;
             contenedor.innerHTML = "";
+            
             catalogoIngredientes3D.forEach(ing => {
                 contenedor.innerHTML += `
                     <div draggable="true" ondragstart="event.dataTransfer.setData('text/plain', '${ing.id}')" onclick="agregarCapa('${ing.id}')" class="draggable-item glass-panel border border-stone-800 hover:border-amber-500/60 p-3 rounded-2xl flex flex-col justify-between items-center text-center cursor-pointer shadow-lg group">
                         <div class="w-full h-16 rounded-xl overflow-hidden mb-2 relative">
-                            <img src="${ing.imagen}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300">
+                            <img src="${ing.imagen_url}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300">
                             <div class="absolute inset-0 bg-black/20"></div>
                         </div>
                         <span class="text-xs text-white font-bold block">${ing.nombre}</span>
@@ -276,7 +291,7 @@
         }
 
         function agregarCapa(id) {
-            const ing = catalogoIngredientes3D.find(i => i.id === id);
+            const ing = catalogoIngredientes3D.find(i => i.id == id);
             if(ing) {
                 capasActuales.push({ ...ing, uuid: Math.random().toString(36).substring(2, 9) });
                 actualizarEscena3D();
@@ -327,6 +342,41 @@
             window.precioFinal3D = total;
         }
 
+        function crearPanConAjonjoli(esSuperior = false) {
+            const grupoPan = new THREE.Group();
+            
+            // Pan marrón tostado realista (#c47622)
+            const materialPan = new THREE.MeshStandardMaterial({ color: 0xc47622, roughness: 0.5 });
+            
+            if (!esSuperior) {
+                const geoBase = new THREE.CylinderGeometry(2.3, 2.45, 0.6, 32);
+                const meshBase = new THREE.Mesh(geoBase, materialPan);
+                grupoPan.add(meshBase);
+            } else {
+                const geoSup = new THREE.SphereGeometry(2.3, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+                const meshSup = new THREE.Mesh(geoSup, materialPan);
+                meshSup.scale.set(1, 0.75, 1);
+                grupoPan.add(meshSup);
+            }
+
+            // Semillas de ajonjolí (pequeños puntos blancos repartidos en la superficie superior)
+            const materialAjonjoli = new THREE.MeshBasicMaterial({ color: 0xfffdd0 });
+            const cantidadAjonjoli = esSuperior ? 16 : 8;
+            for (let i = 0; i < cantidadAjonjoli; i++) {
+                const geoSemilla = new THREE.CapsuleGeometry(0.04, 0.08, 4, 8);
+                const semilla = new THREE.Mesh(geoSemilla, materialAjonjoli);
+                
+                const angulo = Math.random() * Math.PI * 2;
+                const radio = Math.random() * 1.5;
+                semilla.position.set(Math.cos(angulo) * radio, esSuperior ? 0.9 : -0.25, Math.sin(angulo) * radio);
+                semilla.rotation.x = Math.random() * Math.PI;
+                semilla.rotation.z = Math.random() * Math.PI;
+                grupoPan.add(semilla);
+            }
+
+            return grupoPan;
+        }
+
         function actualizarEscena3D() {
             if(!hamburguesaGrupo) return;
 
@@ -336,35 +386,30 @@
 
             let alturaActualY = -2.2;
 
-            // Pan base con tono marrón tostado realista
-            const panBaseGeo = new THREE.CylinderGeometry(2.3, 2.45, 0.6, 32);
-            const panMaterial = new THREE.MeshStandardMaterial({ color: 0xc47622, roughness: 0.5 });
-            const panBaseMesh = new THREE.Mesh(panBaseGeo, panMaterial);
+            // Pan base con ajonjolí
+            const panBaseMesh = crearPanConAjonjoli(false);
             panBaseMesh.position.y = alturaActualY;
             hamburguesaGrupo.add(panBaseMesh);
             alturaActualY += 0.5;
 
             capasActuales.forEach((capa) => {
                 let meshCapa;
-                const matCapa = new THREE.MeshStandardMaterial({ color: capa.color, roughness: 0.4 });
+                const colorHex = typeof capa.color === 'string' ? parseInt(capa.color.replace('#', '0x')) : capa.color;
+                const matCapa = new THREE.MeshStandardMaterial({ color: colorHex, roughness: 0.4 });
 
                 if (capa.tipo === 'cilindro') {
-                    // Carne que sobresale ligeramente
                     const geo = new THREE.CylinderGeometry(2.35, 2.35, 0.45, 32);
                     meshCapa = new THREE.Mesh(geo, matCapa);
                     alturaActualY += 0.35;
                 } else if (capa.tipo === 'slab') {
-                    // Queso fundido ancho que sobresale visiblemente
                     const geo = new THREE.BoxGeometry(3.6, 0.15, 3.6);
                     meshCapa = new THREE.Mesh(geo, matCapa);
                     alturaActualY += 0.2;
                 } else if (capa.tipo === 'tira') {
-                    // Tocineta alargada y sobresaliente
                     const geo = new THREE.BoxGeometry(3.2, 0.1, 1.6);
                     meshCapa = new THREE.Mesh(geo, matCapa);
                     alturaActualY += 0.15;
                 } else if (capa.tipo === 'rodaja') {
-                    // Tomates distribuidos hacia los bordes externos
                     const grupoTomates = new THREE.Group();
                     for(let i=0; i<4; i++) {
                         const geoT = new THREE.CylinderGeometry(0.9, 0.9, 0.15, 16);
@@ -376,7 +421,6 @@
                     meshCapa = grupoTomates;
                     alturaActualY += 0.2;
                 } else if (capa.tipo === 'hoja') {
-                    // Lechuga rizada extendida que sobresale por los lados
                     const geo = new THREE.CylinderGeometry(2.7, 2.8, 0.2, 16);
                     meshCapa = new THREE.Mesh(geo, matCapa);
                     alturaActualY += 0.2;
@@ -391,10 +435,8 @@
                 alturaActualY += 0.2;
             });
 
-            // Pan superior marrón tostado
-            const panSupGeo = new THREE.SphereGeometry(2.3, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2);
-            const panSupMesh = new THREE.Mesh(panSupGeo, panMaterial);
-            panSupMesh.scale.set(1, 0.75, 1);
+            // Pan superior marrón tostado con ajonjolí
+            const panSupMesh = crearPanConAjonjoli(true);
             panSupMesh.position.y = alturaActualY + 0.1;
             hamburguesaGrupo.add(panSupMesh);
         }
