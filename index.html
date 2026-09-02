@@ -798,6 +798,8 @@ async function finalizarOrdenWhatsApp() {
             if(idx === "" || !cuentasDB[idx]) { alert("Selecciona un método de pago."); return; }
             if(!/^\d{12}$/.test(ref)) { alert("Inserta un número de referencia válido de exactamente 12 dígitos."); return; }
 
+            const codigoReferidoCliente = localStorage.getItem('dunig_ref_code') || 'NINGUNO';
+
             const cuenta = cuentasDB[idx];
             let total = carrito.reduce((a, b) => a + b.precio, 0);
             let lista = carrito.map(i => `• ${i.titulo} ($${i.precio.toFixed(2)})`).join('\n');
@@ -806,18 +808,20 @@ async function finalizarOrdenWhatsApp() {
             const { data } = await supabaseClient.from('ajustes_sistema').select('valor').eq('id', 'whatsapp_notificaciones').single();
             if(data && data.valor) wsNum = data.valor.replace(/[^0-9]/g, "");
 
-            const mensaje = `🍔 *PEDIDO VIP - PIZZA PLANETA* 🍔\n\n${lista}\n\n💵 *TOTAL:* $${total.toFixed(2)}\n🏦 *PAGO:* ${cuenta.plataforma} (${cuenta.banco})\n🔢 *REF:* ${ref}`;
+            const mensaje = `🍔 *PEDIDO VIP - PIZZA PLANETA* 🍔\n\n${lista}\n\n💵 *TOTAL:* $${total.toFixed(2)}\n🏦 *PAGO:* ${cuenta.plataforma} (${cuenta.banco})\n🔢 *REF:* ${ref}\n🎁 *REF. CLIENTE:* ${codigoReferidoCliente}`;
 
             await supabaseClient.from('ordenes_vip').insert([{
                 productos: carrito.map(i => i.titulo).join(', '),
                 total: total,
                 referencia: ref,
-                estado: "Pendiente"
+                estado: "Pendiente",
+                codigo_referido: codigoReferidoCliente
             }]);
 
             carrito = [];
             document.getElementById('contador-carrito-badge').innerText = "0";
             document.getElementById('input-ref-pago').value = "";
+            localStorage.removeItem('dunig_ref_code');
             cambiarPantalla('vitrina');
             window.open(`https://api.whatsapp.com/send?phone=${wsNum}&text=${encodeURIComponent(mensaje)}`, '_blank');
         }
