@@ -261,545 +261,536 @@
 
     <script>
         const SUPABASE_URL = "https://vcymfspywjabnbddbruh.supabase.co"; 
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZjeW1mc3B5d2phYm5iZGRicnVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ2Njg1MjIsImV4cCI6MjEwMDI0NDUyMn0.bXamCrThn-oGgK_6Ol2w3cSoxUd0pJDHW0_UkPqGEuA"; 
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZjeW1mc3B5d2phYm5iZGRicnVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ2Njg1MjIsImV4cCI6MjEwMDI0NDUyMn0.bXamCrThn-oGgK_6Ol2w3cSoxUd0pJDHW0_UkPqGEuA"; 
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        let carrito = [];
-        let capasActuales = []; 
-        let catalogoIngredientes3D = [];
-        let baseProductos = [], cuentasDB = [];
-        let productoSeleccionado = null, filtroInstagram = "luxury_store";
-        let fotoSeleccionadaParaLightbox = "";
-        const precioBasePan = 1.50;
+let carrito = [];
+let capasActuales = []; 
+let catalogoIngredientes3D = [];
+let baseProductos = [], cuentasDB = [];
+let productoSeleccionado = null, filtroInstagram = "luxury_store";
+let fotoSeleccionadaParaLightbox = "";
+const precioBasePan = 1.00; // <-- Ajustado a 1.00
 
-        let scene, camera, renderer, hamburguesaGrupo;
+let scene, camera, renderer, hamburguesaGrupo;
 
-        function cambiarPantalla(nombre) {
-            ['vitrina', 'detalle', 'simulador3d', 'carrito'].forEach(v => {
-                const el = document.getElementById(`vista-${v}`);
-                if(el) el.classList.add('hidden');
-            });
-            const target = document.getElementById(`vista-${nombre}`);
-            if(target) target.classList.remove('hidden');
+function cambiarPantalla(nombre) {
+    ['vitrina', 'detalle', 'simulador3d', 'carrito'].forEach(v => {
+        const el = document.getElementById(`vista-${v}`);
+        if(el) el.classList.add('hidden');
+    });
+    const target = document.getElementById(`vista-${nombre}`);
+    if(target) target.classList.remove('hidden');
 
-            if (nombre === 'simulador3d') {
-                setTimeout(async () => {
-                    if (!scene) inicializarThreeJS();
-                    else {
-                        const container = document.getElementById('webgl-container');
-                        if (renderer && container) {
-                            renderer.setSize(container.clientWidth, container.clientHeight);
-                            camera.aspect = container.clientWidth / container.clientHeight;
-                            camera.updateProjectionMatrix();
-                        }
-                    }
-                    await cargarIngredientesDesdeSupabase();
-                    actualizarEscena3D();
-                }, 150);
-            }
-            if (nombre === 'carrito') {
-                renderizarCarrito();
-                cargarCuentasPago();
-            }
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            setTimeout(() => lucide.createIcons(), 50);
-        }
-
-        async function descargarCatalogoDeSupabase() {
-            const grid = document.getElementById('grid-productos-vitrina');
-            if(!grid) return;
-
-            const { data, error } = await supabaseClient.from('productos').select('*');
-            if (error) {
-                console.error("Error al cargar productos:", error);
-                grid.innerHTML = `<div class="col-span-3 text-center text-red-400 font-mono text-xs">Error al conectar con la base de datos.</div>`;
-                return;
-            }
-
-            if (data && data.length > 0) {
-                baseProductos = data;
-                grid.innerHTML = "";
-                data.forEach(p => {
-                    const titulo = p.titulo || p.nombre || "Producto sin nombre";
-                    const precio = parseFloat(p.precio || p.valor || 0);
-                    const imagen = p.imagen_url || p.imagen || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600';
-                    const categoria = p.categoria || 'ESPECIALIDAD';
-
-                    grid.innerHTML += `
-                        <div onclick="verDetalleDeProducto(${p.id})" class="glass-panel rounded-3xl overflow-hidden border border-stone-800 flex flex-col justify-between shadow-xl cursor-pointer hover:border-amber-500/40 transition-all group">
-                            <div class="aspect-video bg-stone-950 overflow-hidden relative">
-                                <img src="${imagen}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-                                <span class="absolute top-3 left-3 bg-black/70 backdrop-blur-md text-[8px] font-futurista font-bold uppercase tracking-widest text-amber-400 px-2.5 py-1 rounded border border-stone-800">${categoria}</span>
-                            </div>
-                            <div class="p-5 space-y-3">
-                                <h3 class="font-futurista font-bold text-xs text-white uppercase truncate">${titulo}</h3>
-                                <div class="flex justify-between items-center pt-2 border-t border-stone-900">
-                                    <span class="font-mono text-xs text-amber-400 font-bold">$${precio.toFixed(2)}</span>
-                                    <span class="text-[10px] font-futurista font-black uppercase text-amber-400 underline">Ver Detalles</span>
-                                </div>
-                            </div>
-                        </div>`;
-                });
-            } else {
-                grid.innerHTML = `<div class="col-span-3 text-center text-stone-500 font-mono text-xs">No se encontraron productos registrados en Supabase.</div>`;
-            }
-            lucide.createIcons();
-        }
-
-        function verDetalleDeProducto(idProducto) {
-            productoSeleccionado = baseProductos.find(p => p.id === idProducto); 
-            if (!productoSeleccionado) return;
-
-            document.getElementById('detalle-titulo').innerText = productoSeleccionado.titulo || productoSeleccionado.nombre;
-            document.getElementById('detalle-categoria').innerText = productoSeleccionado.categoria || 'ESPECIALIDAD';
-            document.getElementById('detalle-precio').innerText = `$${parseFloat(productoSeleccionado.precio || 0).toFixed(2)}`;
-            document.getElementById('detalle-descripcion').innerText = productoSeleccionado.descripcion || "Sin descripción disponible.";
-            document.getElementById('detalle-stock').innerText = `${productoSeleccionado.stock || 10} unidades disponibles`;
-
-            const imgInicial = productoSeleccionado.imagen_url || productoSeleccionado.imagen || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600";
-            actualizarVisorFoto(imgInicial);
-
-            let fotosSlider = [];
-            try { if(productoSeleccionado.imagenes_slider) fotosSlider = JSON.parse(productoSeleccionado.imagenes_slider) || []; } catch(e){}
-            if (fotosSlider.length === 0 && imgInicial) { fotosSlider.push(imgInicial); }
-
-            const containerMiniaturas = document.getElementById('detalle-contenedor-miniaturas'); 
-            containerMiniaturas.innerHTML = "";
-            fotosSlider.forEach((img) => {
-                if(img) {
-                    containerMiniaturas.innerHTML += `<div onclick="actualizarVisorFoto('${img}')" class="aspect-square rounded-xl bg-stone-950 border border-stone-800 overflow-hidden cursor-pointer hover:border-amber-500/40 transition-all"><img src="${img}" class="w-full h-full object-cover"></div>`;
+    if (nombre === 'simulador3d') {
+        setTimeout(async () => {
+            if (!scene) inicializarThreeJS();
+            else {
+                const container = document.getElementById('webgl-container');
+                if (renderer && container) {
+                    renderer.setSize(container.clientWidth, container.clientHeight);
+                    camera.aspect = container.clientWidth / container.clientHeight;
+                    camera.updateProjectionMatrix();
                 }
-            });
-
-            renderizarAdicionales();
-            cambiarPantallaDetalleDirecto();
-        }
-
-        function cambiarPantallaDetalleDirecto() {
-            ['vitrina', 'simulador3d', 'carrito'].forEach(v => {
-                const el = document.getElementById(`vista-${v}`);
-                if(el) el.classList.add('hidden');
-            });
-            document.getElementById('vista-detalle').classList.remove('hidden');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            setTimeout(() => lucide.createIcons(), 50);
-        }
-
-        function actualizarVisorFoto(url) {
-            fotoSeleccionadaParaLightbox = url;
-            document.getElementById('detalle-visor-principal').src = url;
-        }
-
-        function amplificarFotoActual() {
-            if(!fotoSeleccionadaParaLightbox) return;
-            const lightbox = document.getElementById('modal-lightbox');
-            const imgCompleta = document.getElementById('lightbox-imagen-completa');
-            imgCompleta.src = fotoSeleccionadaParaLightbox;
-            lightbox.classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
-        }
-
-        function cerrarAmplificacion() {
-            document.getElementById('modal-lightbox').classList.add('hidden');
-            document.body.style.overflow = 'auto';
-        }
-
-        async function descargarAdicionalesDeSupabase() {
-            const { data, error } = await supabaseClient.from('adicionales').select('*');
-            if (!error && data) {
-                window.listaAdicionales = data;
             }
-        }
-
-        function renderizarAdicionales() {
-            const contenedor = document.getElementById('contenedor-adicionales');
-            if (!contenedor || !window.listaAdicionales || window.listaAdicionales.length === 0) {
-                if(contenedor) contenedor.innerHTML = "";
-                return;
-            }
-
-            contenedor.innerHTML = `
-                <details class="group bg-stone-900 border border-stone-800 rounded-xl overflow-hidden my-4">
-                    <summary class="list-none p-4 text-[10px] font-bold text-stone-400 cursor-pointer flex justify-between items-center hover:text-amber-400">
-                        <span>SELECCIONAR ADICIONALES / EXTRAS</span>
-                        <i data-lucide="chevron-down" class="w-4 h-4 group-open:rotate-180 transition-transform"></i>
-                    </summary>
-                    <div class="p-3 border-t border-stone-800 space-y-2">
-                        ${window.listaAdicionales.map(ad => `
-                            <label class="flex items-center gap-3 cursor-pointer p-2 hover:bg-stone-800 rounded-lg">
-                                <input type="checkbox" class="check-adicional w-4 h-4 accent-amber-500" data-nombre="${ad.nombre}" data-precio="${ad.precio}">
-                                <span class="text-xs text-white font-medium">${ad.nombre}</span>
-                                <span class="text-xs text-amber-400 font-mono ml-auto">+$${parseFloat(ad.precio).toFixed(2)}</span>
-                            </label>
-                        `).join('')}
-                    </div>
-                </details>`;
-            lucide.createIcons();
-        }
-
-        function agregarDetalleAlCarritoYVolver() {
-            if (!productoSeleccionado) return;
-
-            const checkboxes = document.querySelectorAll('.check-adicional:checked');
-            let adicionalesSeleccionados = [];
-            let extraTotal = 0;
-
-            checkboxes.forEach(cb => {
-                adicionalesSeleccionados.push(cb.getAttribute('data-nombre'));
-                extraTotal += parseFloat(cb.getAttribute('data-precio') || 0);
-            });
-
-            const tituloBase = productoSeleccionado.titulo || productoSeleccionado.nombre;
-            const tituloFinal = `${tituloBase} ${adicionalesSeleccionados.length > 0 ? '(+ ' + adicionalesSeleccionados.join(', ') + ')' : ''}`;
-            const precioFinal = parseFloat(productoSeleccionado.precio || 0) + extraTotal;
-            const imagenFinal = productoSeleccionado.imagen_url || productoSeleccionado.imagen || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=600';
-
-            carrito.push({ titulo: tituloFinal, precio: precioFinal, imagen_url: imagenFinal });
-            document.getElementById('contador-carrito-badge').innerText = carrito.length;
-            
-            alert(`¡"${tituloFinal}" agregado al carrito con éxito!`);
-            cambiarPantalla('vitrina');
-        }
-
-        async function cargarIngredientesDesdeSupabase() {
-            try {
-                const { data, error } = await supabaseClient.from('ingredientes_3d').select('*');
-                if (error || !data || data.length === 0) {
-                    cargarIngredientesRespaldo();
-                } else {
-                    catalogoIngredientes3D = data.map(item => ({
-                        id: item.id || item.codigo || item.nombre,
-                        nombre: item.nombre || item.titulo,
-                        precio: parseFloat(item.precio || item.valor || 0),
-                        color: item.color || '#c47622',
-                        tipo: item.tipo || 'cilindro',
-                        imagen_url: item.imagen_url || item.imagen || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=300'
-                    }));
-                    renderizarBandejaIngredientes();
-                }
-            } catch (err) {
-                cargarIngredientesRespaldo();
-            }
-        }
-
-        function cargarIngredientesRespaldo() {
-    catalogoIngredientes3D = [
-        { id: 'INGRESA_AQU_EL_UUID_DE_SUPABASE', nombre: 'Carne a la Parrilla', precio: 0.00, color: '#3d1c02', tipo: 'cilindro', imagen_url: 'https://images.unsplash.com/photo-1586190848861-99aa4a171e90?q=80&w=300' },
-        { id: 'INGRESA_AQU_EL_UUID_DE_SUPABASE', nombre: 'Queso Cheddar Fundido', precio: 0.00, color: '#ff6600', tipo: 'slab', imagen_url: 'https://images.unsplash.com/photo-1631379578550-7038263db699?q=80&w=300' },
-        { id: 'INGRESA_AQU_EL_UUID_DE_SUPABASE', nombre: 'Tocineta Crujiente', precio: 0.00, color: '#5c1d1d', tipo: 'tira_sobresaliente', imagen_url: 'https://images.unsplash.com/photo-1607305387299-a3d9611cd469?q=80&w=300' },
-        { id: 'INGRESA_AQU_EL_UUID_DE_SUPABASE', nombre: 'Tomate Rebanado 3D', precio: 0.00, color: '#cc2200', tipo: 'rodaja_sobresaliente', imagen_url: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?q=80&w=300' },
-        { id: 'INGRESA_AQU_EL_UUID_DE_SUPABASE', nombre: 'Lechuga Rizada', precio: 0.00, color: '#22aa33', tipo: 'cilindro_exacto', imagen_url: 'https://images.unsplash.com/photo-1622206151226-18ca2c4ab4a1?q=80&w=300' },
-        { id: 'INGRESA_AQU_EL_UUID_DE_SUPABASE', nombre: 'Huevo Frito', precio: 0.00, color: '#ffffff', tipo: 'huevo_frito', imagen_url: 'https://images.unsplash.com/photo-1525351484163-7529414344d8?q=80&w=300' }
-    ];
-    renderizarBandejaIngredientes();
+            await cargarIngredientesDesdeSupabase();
+            actualizarEscena3D();
+        }, 150);
+    }
+    if (nombre === 'carrito') {
+        renderizarCarrito();
+        cargarCuentasPago();
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => lucide.createIcons(), 50);
 }
 
-        function inicializarThreeJS() {
-            const container = document.getElementById('webgl-container');
-            if(!container) return;
-            container.innerHTML = ""; 
+async function descargarCatalogoDeSupabase() {
+    const grid = document.getElementById('grid-productos-vitrina');
+    if(!grid) return;
 
-            scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 1000);
-            camera.position.set(0, 5, 12);
-            camera.lookAt(0, 0, 0);
+    const { data, error } = await supabaseClient.from('productos').select('*');
+    if (error) {
+        grid.innerHTML = `<div class="col-span-3 text-center text-red-400 font-mono text-xs">Error al conectar con la base de datos.</div>`;
+        return;
+    }
 
-            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-            renderer.setSize(container.clientWidth, container.clientHeight);
-            renderer.setPixelRatio(window.devicePixelRatio);
-            container.appendChild(renderer.domElement);
+    if (data && data.length > 0) {
+        baseProductos = data;
+        grid.innerHTML = "";
+        data.forEach(p => {
+            const titulo = p.titulo || p.nombre || "Producto sin nombre";
+            const precio = parseFloat(p.precio || p.valor || 0);
+            const imagen = p.imagen_url || p.imagen || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600';
+            const categoria = p.categoria || 'ESPECIALIDAD';
 
-            scene.add(new THREE.AmbientLight(0xffffff, 1.2));
-            const dirLight = new THREE.DirectionalLight(0xfffaed, 2.0);
-            dirLight.position.set(5, 10, 7);
-            scene.add(dirLight);
-
-            hamburguesaGrupo = new THREE.Group();
-            scene.add(hamburguesaGrupo);
-
-            let isDragging = false;
-            let previousMousePosition = { x: 0, y: 0 };
-
-            container.addEventListener('mousedown', (e) => { isDragging = true; previousMousePosition = { x: e.clientX, y: e.clientY }; });
-            container.addEventListener('mousemove', (e) => {
-                if (!isDragging) return;
-                const deltaX = e.clientX - previousMousePosition.x;
-                hamburguesaGrupo.rotation.y += deltaX * 0.01;
-                previousMousePosition = { x: e.clientX, y: e.clientY };
-            });
-            window.addEventListener('mouseup', () => { isDragging = false; });
-
-            animarThreeJS();
-        }
-
-        function animarThreeJS() {
-            requestAnimationFrame(animarThreeJS);
-            if(renderer && scene && camera) {
-                renderer.render(scene, camera);
-            }
-        }
-
-        function renderizarBandejaIngredientes() {
-            const contenedor = document.getElementById('bandeja-ingredientes-arrastrables');
-            if(!contenedor) return;
-            contenedor.innerHTML = "";
-            
-            catalogoIngredientes3D.forEach(ing => {
-                contenedor.innerHTML += `
-                    <div draggable="true" ondragstart="event.dataTransfer.setData('text/plain', '${ing.id}')" onclick="agregarCapa('${ing.id}')" class="draggable-item glass-panel border border-stone-800 hover:border-amber-500/60 p-3 rounded-2xl flex flex-col justify-between items-center text-center cursor-pointer shadow-lg group">
-                        <div class="w-full h-16 rounded-xl overflow-hidden mb-2 relative bg-stone-900">
-                            <img src="${ing.imagen_url}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300">
+            grid.innerHTML += `
+                <div onclick="verDetalleDeProducto(${p.id})" class="glass-panel rounded-3xl overflow-hidden border border-stone-800 flex flex-col justify-between shadow-xl cursor-pointer hover:border-amber-500/40 transition-all group">
+                    <div class="aspect-video bg-stone-950 overflow-hidden relative">
+                        <img src="${imagen}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        <span class="absolute top-3 left-3 bg-black/70 backdrop-blur-md text-[8px] font-futurista font-bold uppercase tracking-widest text-amber-400 px-2.5 py-1 rounded border border-stone-800">${categoria}</span>
+                    </div>
+                    <div class="p-5 space-y-3">
+                        <h3 class="font-futurista font-bold text-xs text-white uppercase truncate">${titulo}</h3>
+                        <div class="flex justify-between items-center pt-2 border-t border-stone-900">
+                            <span class="font-mono text-xs text-amber-400 font-bold">$${precio.toFixed(2)}</span>
+                            <span class="text-[10px] font-futurista font-black uppercase text-amber-400 underline">Ver Detalles</span>
                         </div>
-                        <span class="text-xs text-white font-bold block">${ing.nombre}</span>
-                        <span class="text-[10px] text-amber-400 font-mono mt-0.5">+$${ing.precio.toFixed(2)}</span>
-                    </div>`;
-            });
-
-            const zonaDrop = document.getElementById('zona-drop-canvas');
-            if(zonaDrop) {
-                zonaDrop.ondragover = (e) => e.preventDefault();
-                zonaDrop.ondrop = (e) => {
-                    e.preventDefault();
-                    const idIngrediente = e.dataTransfer.getData('text/plain');
-                    if(idIngrediente) agregarCapa(idIngrediente);
-                };
-            }
-        }
-
-        function agregarCapa(id) {
-            const ing = catalogoIngredientes3D.find(i => i.id == id);
-            if(ing) {
-                capasActuales.push({ ...ing, uuid: Math.random().toString(36).substring(2, 9) });
-                actualizarEscena3D();
-                renderizarListaCapasActivas();
-            }
-        }
-
-        function eliminarCapaPorUuid(uuid) {
-            capasActuales = capasActuales.filter(c => c.uuid !== uuid);
-            actualizarEscena3D();
-            renderizarListaCapasActivas();
-        }
-
-        function limpiarTodasLasCapas() {
-            capasActuales = [];
-            actualizarEscena3D();
-            renderizarListaCapasActivas();
-        }
-
-        function renderizarListaCapasActivas() {
-            const contenedor = document.getElementById('lista-capas-activas-pila');
-            if(!contenedor) return;
-            contenedor.innerHTML = "";
-
-            if(capasActuales.length === 0) {
-                contenedor.innerHTML = `<div class="text-xs text-stone-500 text-center py-4 font-mono">Sin ingredientes agregados aún.</div>`;
-                document.getElementById('precio-total-3d').innerText = `$${precioBasePan.toFixed(2)}`;
-                return;
-            }
-
-            let total = precioBasePan;
-            capasActuales.forEach((capa, index) => {
-                total += capa.precio;
-                contenedor.innerHTML += `
-                    <div class="flex justify-between items-center bg-stone-900/90 border border-stone-800 px-3 py-2 rounded-xl text-xs">
-                        <div class="flex items-center gap-2">
-                            <span class="font-mono text-[10px] text-amber-400 font-bold">#${index + 1}</span>
-                            <span class="text-stone-200 font-bold">${capa.nombre}</span>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <span class="font-mono text-amber-400">+$${capa.precio.toFixed(2)}</span>
-                            <button onclick="eliminarCapaPorUuid('${capa.uuid}')" class="w-5 h-5 bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white rounded-md flex items-center justify-center transition-colors font-bold text-[10px] cursor-pointer">✕</button>
-                        </div>
-                    </div>`;
-            });
-
-            document.getElementById('precio-total-3d').innerText = `$${total.toFixed(2)}`;
-            window.precioFinal3D = total;
-        }
-
-        function crearPanBeigeOscuroConPuntitos(esSuperior = false) {
-            const grupoPan = new THREE.Group();
-            const materialPan = new THREE.MeshStandardMaterial({ color: 0x8c6747, roughness: 0.55 });
-            
-            if (!esSuperior) {
-                const geoBase = new THREE.CylinderGeometry(2.3, 2.45, 0.6, 32);
-                grupoPan.add(new THREE.Mesh(geoBase, materialPan));
-            } else {
-                const geoSup = new THREE.SphereGeometry(2.3, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2);
-                const meshSup = new THREE.Mesh(geoSup, materialPan);
-                meshSup.scale.set(1, 0.75, 1);
-                grupoPan.add(meshSup);
-
-                const materialPuntito = new THREE.MeshStandardMaterial({ color: 0x3d2715 });
-                const totalPuntitos = 28;
-                for(let i = 0; i < totalPuntitos; i++) {
-                    const geoPunto = new THREE.SphereGeometry(0.05, 8, 8);
-                    const meshPunto = new THREE.Mesh(geoPunto, materialPuntito);
-                    const phi = Math.acos(-1 + (2 * i) / totalPuntitos) * 0.5;
-                    const theta = Math.sqrt(totalPuntitos * Math.PI) * phi;
-                    const radioDist = 1.6 * Math.sin(phi);
-                    meshPunto.position.set(radioDist * Math.cos(theta), 1.1 + (Math.cos(phi) * 0.4), radioDist * Math.sin(theta));
-                    grupoPan.add(meshPunto);
-                }
-            }
-            return grupoPan;
-        }
-
-        function actualizarEscena3D() {
-            if(!hamburguesaGrupo) return;
-            while(hamburguesaGrupo.children.length > 0){ hamburguesaGrupo.remove(hamburguesaGrupo.children[0]); }
-
-            let alturaActualY = -2.2;
-            const panBaseMesh = crearPanBeigeOscuroConPuntitos(false);
-            panBaseMesh.position.y = alturaActualY;
-            hamburguesaGrupo.add(panBaseMesh);
-            alturaActualY += 0.5;
-
-            capasActuales.forEach((capa) => {
-                let meshCapa;
-                let colorHex = parseInt((capa.color || '#c47622').replace('#', '0x'));
-                const matCapa = new THREE.MeshStandardMaterial({ color: colorHex, roughness: 0.4 });
-
-                if (capa.tipo === 'cilindro') {
-                    meshCapa = new THREE.Mesh(new THREE.CylinderGeometry(2.35, 2.35, 0.45, 32), matCapa);
-                    alturaActualY += 0.35;
-                } else if (capa.tipo === 'slab') {
-                    meshCapa = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.15, 3.6), matCapa);
-                    alturaActualY += 0.2;
-                } else if (capa.tipo === 'huevo_frito') {
-                    const grupoHuevo = new THREE.Group();
-                    grupoHuevo.add(new THREE.Mesh(new THREE.CylinderGeometry(2.4, 2.4, 0.12, 32), new THREE.MeshStandardMaterial({ color: 0xffffff })));
-                    const meshYema = new THREE.Mesh(new THREE.SphereGeometry(0.9, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0xffaa00 }));
-                    meshYema.scale.set(1, 0.5, 1);
-                    meshYema.position.set(0.4, 0.06, -0.3);
-                    grupoHuevo.add(meshYema);
-                    meshCapa = grupoHuevo;
-                    alturaActualY += 0.2;
-                } else {
-                    meshCapa = new THREE.Mesh(new THREE.CylinderGeometry(2.35, 2.35, 0.2, 32), matCapa);
-                    alturaActualY += 0.2;
-                }
-
-                meshCapa.position.y = alturaActualY;
-                hamburguesaGrupo.add(meshCapa);
-                alturaActualY += 0.2;
-            });
-
-            const panSupMesh = crearPanBeigeOscuroConPuntitos(true);
-            panSupMesh.position.y = alturaActualY + 0.1;
-            hamburguesaGrupo.add(panSupMesh);
-        }
-
-        function enviarCreacion3DAlCarrito() {
-            if (capasActuales.length === 0) {
-                alert("Arma tu hamburguesa 3D agregando al menos un ingrediente.");
-                return;
-            }
-            const nombres = capasActuales.map(i => i.nombre).join(', ');
-            carrito.push({
-                titulo: `🍔 Burger 3D Real (${nombres})`,
-                precio: window.precioFinal3D || 1.00,
-                imagen_url: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=600"
-            });
-            document.getElementById('contador-carrito-badge').innerText = carrito.length;
-            alert("¡Hamburguesa 3D agregada con éxito al carrito!");
-            capasActuales = [];
-            cambiarPantalla('vitrina');
-        }
-
-        function renderizarCarrito() {
-            const cont = document.getElementById('lista-items-carrito');
-            const contAbajo = document.getElementById('cantidad-items-abajo');
-            if(!cont) return;
-            cont.innerHTML = "";
-            let total = 0;
-            if(contAbajo) contAbajo.innerText = carrito.length;
-
-            if(carrito.length === 0) {
-                cont.innerHTML = `<div class="p-8 text-center text-stone-500 font-mono text-xs">Tu bolsa está vacía.</div>`;
-                document.getElementById('carrito-monto-total').innerText = "$0.00";
-                if(document.getElementById('carrito-subtotal-monto-abajo')) document.getElementById('carrito-subtotal-monto-abajo').innerText = "$0.00";
-                return;
-            }
-
-            carrito.forEach((item, idx) => {
-                total += item.precio;
-                cont.innerHTML += `
-                    <div class="flex justify-between items-center py-4 first:pt-2 last:pb-2">
-                        <div class="flex items-center gap-3">
-                            <img src="${item.imagen_url}" class="w-12 h-12 object-cover rounded-xl border border-stone-800">
-                            <div>
-                                <h4 class="text-xs font-bold text-white font-futurista uppercase">${item.titulo}</h4>
-                                <button onclick="carrito.splice(${idx},1);renderizarCarrito();document.getElementById('contador-carrito-badge').innerText=carrito.length;" class="text-[10px] text-red-400 hover:underline cursor-pointer">Eliminar</button>
-                            </div>
-                        </div>
-                        <span class="font-mono text-amber-400 font-bold">$${item.precio.toFixed(2)}</span>
-                    </div>`;
-            });
-            document.getElementById('carrito-monto-total').innerText = `$${total.toFixed(2)}`;
-            if(document.getElementById('carrito-subtotal-monto-abajo')) document.getElementById('carrito-subtotal-monto-abajo').innerText = `$${total.toFixed(2)}`;
-        }
-
-        async function cargarCuentasPago() {
-            const sel = document.getElementById('select-metodo-pago');
-            if(!sel) return;
-            const { data } = await supabaseClient.from('cuentas_pago').select('*');
-            if(data) {
-                cuentasDB = data;
-                sel.innerHTML = "<option value=''>-- Seleccionar Método --</option>";
-                data.forEach((c, i) => {
-                    const plataformaStr = c.plataforma ? c.plataforma.toUpperCase() : 'MÉTODO';
-                    const bancoStr = c.banco ? ` - ${c.banco}` : '';
-                    sel.innerHTML += `<option value="${i}">[${plataformaStr}]${bancoStr}</option>`;
-                });
-            }
-        }
-
-        function mostrarDetallesBanco() {
-            const idx = document.getElementById('select-metodo-pago').value;
-            const caja = document.getElementById('caja-banco-detalle');
-            if(!caja) return;
-            if(idx === "" || !cuentasDB[idx]) { caja.classList.add('hidden'); return; }
-            const c = cuentasDB[idx];
-            caja.classList.remove('hidden');
-            caja.innerHTML = `
-                <div><b>Banco:</b> ${c.banco || 'N/A'}</div>
-                <div><b>Titular:</b> ${c.titular || 'N/A'}</div>
-                <div><b>CI/RIF:</b> ${c.ci || 'N/A'}</div>
-                <div><b>Teléfono:</b> ${c.telefono || 'N/A'}</div>
-                ${c.detalles ? `<div class="italic text-stone-400 mt-1">${c.detalles}</div>` : ''}
-            `;
-        }
-
-        // LÓGICA DE REFERIDOS
-        window.addEventListener('DOMContentLoaded', () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const codigoReferido = urlParams.get('ref');
-
-            if (codigoReferido) {
-                localStorage.setItem('dunig_ref_code', codigoReferido);
-            }
-
-            const refGuardado = localStorage.getItem('dunig_ref_code');
-            if (refGuardado) {
-                const badge = document.getElementById('badge-referido');
-                const textRef = document.getElementById('text-codigo-ref');
-                const displayRef = document.getElementById('display-codigo-referido');
-                const contenedorRef = document.getElementById('contenedor-ref-info');
-
-                if(badge) { badge.classList.remove('hidden'); badge.classList.add('flex'); }
-                if(textRef) textRef.innerText = refGuardado;
-                if(displayRef) displayRef.innerText = refGuardado;
-                if(contenedorRef) contenedorRef.classList.remove('hidden');
-            }
-
-            descargarCatalogoDeSupabase();
-            descargarAdicionalesDeSupabase();
-            lucide.createIcons();
+                    </div>
+                </div>`;
         });
+    } else {
+        grid.innerHTML = `<div class="col-span-3 text-center text-stone-500 font-mono text-xs">No se encontraron productos registrados en Supabase.</div>`;
+    }
+    lucide.createIcons();
+}
 
-        async function finalizarOrdenWhatsApp() {
+function verDetalleDeProducto(idProducto) {
+    productoSeleccionado = baseProductos.find(p => p.id === idProducto); 
+    if (!productoSeleccionado) return;
+
+    document.getElementById('detalle-titulo').innerText = productoSeleccionado.titulo || productoSeleccionado.nombre;
+    document.getElementById('detalle-categoria').innerText = productoSeleccionado.categoria || 'ESPECIALIDAD';
+    document.getElementById('detalle-precio').innerText = `$${parseFloat(productoSeleccionado.precio || 0).toFixed(2)}`;
+    document.getElementById('detalle-descripcion').innerText = productoSeleccionado.descripcion || "Sin descripción disponible.";
+    document.getElementById('detalle-stock').innerText = `${productoSeleccionado.stock || 10} unidades disponibles`;
+
+    const imgInicial = productoSeleccionado.imagen_url || productoSeleccionado.imagen || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600";
+    actualizarVisorFoto(imgInicial);
+
+    let fotosSlider = [];
+    try { if(productoSeleccionado.imagenes_slider) fotosSlider = JSON.parse(productoSeleccionado.imagenes_slider) || []; } catch(e){}
+    if (fotosSlider.length === 0 && imgInicial) { fotosSlider.push(imgInicial); }
+
+    const containerMiniaturas = document.getElementById('detalle-contenedor-miniaturas'); 
+    containerMiniaturas.innerHTML = "";
+    fotosSlider.forEach((img) => {
+        if(img) {
+            containerMiniaturas.innerHTML += `<div onclick="actualizarVisorFoto('${img}')" class="aspect-square rounded-xl bg-stone-950 border border-stone-800 overflow-hidden cursor-pointer hover:border-amber-500/40 transition-all"><img src="${img}" class="w-full h-full object-cover"></div>`;
+        }
+    });
+
+    renderizarAdicionales();
+    cambiarPantallaDetalleDirecto();
+}
+
+function cambiarPantallaDetalleDirecto() {
+    ['vitrina', 'simulador3d', 'carrito'].forEach(v => {
+        const el = document.getElementById(`vista-${v}`);
+        if(el) el.classList.add('hidden');
+    });
+    document.getElementById('vista-detalle').classList.remove('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => lucide.createIcons(), 50);
+}
+
+function actualizarVisorFoto(url) {
+    fotoSeleccionadaParaLightbox = url;
+    document.getElementById('detalle-visor-principal').src = url;
+}
+
+function amplificarFotoActual() {
+    if(!fotoSeleccionadaParaLightbox) return;
+    const lightbox = document.getElementById('modal-lightbox');
+    const imgCompleta = document.getElementById('lightbox-imagen-completa');
+    imgCompleta.src = fotoSeleccionadaParaLightbox;
+    lightbox.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function cerrarAmplificacion() {
+    document.getElementById('modal-lightbox').classList.add('hidden');
+    document.body.style.overflow = 'auto';
+}
+
+async function descargarAdicionalesDeSupabase() {
+    const { data, error } = await supabaseClient.from('adicionales').select('*');
+    if (!error && data) {
+        window.listaAdicionales = data;
+    }
+}
+
+function renderizarAdicionales() {
+    const contenedor = document.getElementById('contenedor-adicionales');
+    if (!contenedor || !window.listaAdicionales || window.listaAdicionales.length === 0) {
+        if(contenedor) contenedor.innerHTML = "";
+        return;
+    }
+
+    contenedor.innerHTML = `
+        <details class="group bg-stone-900 border border-stone-800 rounded-xl overflow-hidden my-4">
+            <summary class="list-none p-4 text-[10px] font-bold text-stone-400 cursor-pointer flex justify-between items-center hover:text-amber-400">
+                <span>SELECCIONAR ADICIONALES / EXTRAS</span>
+                <i data-lucide="chevron-down" class="w-4 h-4 group-open:rotate-180 transition-transform"></i>
+            </summary>
+            <div class="p-3 border-t border-stone-800 space-y-2">
+                ${window.listaAdicionales.map(ad => `
+                    <label class="flex items-center gap-3 cursor-pointer p-2 hover:bg-stone-800 rounded-lg">
+                        <input type="checkbox" class="check-adicional w-4 h-4 accent-amber-500" data-nombre="${ad.nombre}" data-precio="${ad.precio}">
+                        <span class="text-xs text-white font-medium">${ad.nombre}</span>
+                        <span class="text-xs text-amber-400 font-mono ml-auto">+$${parseFloat(ad.precio).toFixed(2)}</span>
+                    </label>
+                `).join('')}
+            </div>
+        </details>`;
+    lucide.createIcons();
+}
+
+function agregarDetalleAlCarritoYVolver() {
+    if (!productoSeleccionado) return;
+
+    const checkboxes = document.querySelectorAll('.check-adicional:checked');
+    let adicionalesSeleccionados = [];
+    let extraTotal = 0;
+
+    checkboxes.forEach(cb => {
+        adicionalesSeleccionados.push(cb.getAttribute('data-nombre'));
+        extraTotal += parseFloat(cb.getAttribute('data-precio') || 0);
+    });
+
+    const tituloBase = productoSeleccionado.titulo || productoSeleccionado.nombre;
+    const tituloFinal = `${tituloBase} ${adicionalesSeleccionados.length > 0 ? '(+ ' + adicionalesSeleccionados.join(', ') + ')' : ''}`;
+    const precioFinal = parseFloat(productoSeleccionado.precio || 0) + extraTotal;
+    const imagenFinal = productoSeleccionado.imagen_url || productoSeleccionado.imagen || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=600';
+
+    carrito.push({ titulo: tituloFinal, precio: precioFinal, imagen_url: imagenFinal });
+    document.getElementById('contador-carrito-badge').innerText = carrito.length;
+    
+    alert(`¡"${tituloFinal}" agregado al carrito con éxito!`);
+    cambiarPantalla('vitrina');
+}
+
+async function cargarIngredientesDesdeSupabase() {
+    try {
+        const { data, error } = await supabaseClient.from('ingredientes_3d').select('*');
+        if (error || !data || data.length === 0) {
+            catalogoIngredientes3D = [];
+        } else {
+            catalogoIngredientes3D = data.map(item => ({
+                id: item.id, // UUID real de Supabase
+                nombre: item.nombre || item.titulo,
+                precio: parseFloat(item.precio || item.valor || 0),
+                color: item.color || '#c47622',
+                tipo: item.tipo || 'cilindro',
+                imagen_url: item.imagen_url || item.imagen || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=300'
+            }));
+            renderizarBandejaIngredientes();
+        }
+    } catch (err) {
+        console.error("Error cargando ingredientes:", err);
+    }
+}
+
+function inicializarThreeJS() {
+    const container = document.getElementById('webgl-container');
+    if(!container) return;
+    container.innerHTML = ""; 
+
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 1000);
+    camera.position.set(0, 5, 12);
+    camera.lookAt(0, 0, 0);
+
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    container.appendChild(renderer.domElement);
+
+    scene.add(new THREE.AmbientLight(0xffffff, 1.2));
+    const dirLight = new THREE.DirectionalLight(0xfffaed, 2.0);
+    dirLight.position.set(5, 10, 7);
+    scene.add(dirLight);
+
+    hamburguesaGrupo = new THREE.Group();
+    scene.add(hamburguesaGrupo);
+
+    let isDragging = false;
+    let previousMousePosition = { x: 0, y: 0 };
+
+    container.addEventListener('mousedown', (e) => { isDragging = true; previousMousePosition = { x: e.clientX, y: e.clientY }; });
+    container.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        const deltaX = e.clientX - previousMousePosition.x;
+        hamburguesaGrupo.rotation.y += deltaX * 0.01;
+        previousMousePosition = { x: e.clientX, y: e.clientY };
+    });
+    window.addEventListener('mouseup', () => { isDragging = false; });
+
+    animarThreeJS();
+}
+
+function animarThreeJS() {
+    requestAnimationFrame(animarThreeJS);
+    if(renderer && scene && camera) {
+        renderer.render(scene, camera);
+    }
+}
+
+function renderizarBandejaIngredientes() {
+    const contenedor = document.getElementById('bandeja-ingredientes-arrastrables');
+    if(!contenedor) return;
+    contenedor.innerHTML = "";
+    
+    catalogoIngredientes3D.forEach(ing => {
+        contenedor.innerHTML += `
+            <div draggable="true" ondragstart="event.dataTransfer.setData('text/plain', '${ing.id}')" onclick="agregarCapa('${ing.id}')" class="draggable-item glass-panel border border-stone-800 hover:border-amber-500/60 p-3 rounded-2xl flex flex-col justify-between items-center text-center cursor-pointer shadow-lg group">
+                <div class="w-full h-16 rounded-xl overflow-hidden mb-2 relative bg-stone-900">
+                    <img src="${ing.imagen_url}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300">
+                </div>
+                <span class="text-xs text-white font-bold block">${ing.nombre}</span>
+                <span class="text-[10px] text-amber-400 font-mono mt-0.5">+$${ing.precio.toFixed(2)}</span>
+            </div>`;
+    });
+
+    const zonaDrop = document.getElementById('zona-drop-canvas');
+    if(zonaDrop) {
+        zonaDrop.ondragover = (e) => e.preventDefault();
+        zonaDrop.ondrop = (e) => {
+            e.preventDefault();
+            const idIngrediente = e.dataTransfer.getData('text/plain');
+            if(idIngrediente) agregarCapa(idIngrediente);
+        };
+    }
+}
+
+function agregarCapa(id) {
+    const ing = catalogoIngredientes3D.find(i => i.id == id);
+    if(ing) {
+        capasActuales.push({ ...ing, uuid: Math.random().toString(36).substring(2, 9) });
+        actualizarEscena3D();
+        renderizarListaCapasActivas();
+    }
+}
+
+function eliminarCapaPorUuid(uuid) {
+    capasActuales = capasActuales.filter(c => c.uuid !== uuid);
+    actualizarEscena3D();
+    renderizarListaCapasActivas();
+}
+
+function limpiarTodasLasCapas() {
+    capasActuales = [];
+    actualizarEscena3D();
+    renderizarListaCapasActivas();
+}
+
+function renderizarListaCapasActivas() {
+    const contenedor = document.getElementById('lista-capas-activas-pila');
+    if(!contenedor) return;
+    contenedor.innerHTML = "";
+
+    if(capasActuales.length === 0) {
+        contenedor.innerHTML = `<div class="text-xs text-stone-500 text-center py-4 font-mono">Sin ingredientes agregados aún.</div>`;
+        document.getElementById('precio-total-3d').innerText = `$${precioBasePan.toFixed(2)}`;
+        window.precioFinal3D = precioBasePan;
+        return;
+    }
+
+    let total = precioBasePan;
+    capasActuales.forEach((capa, index) => {
+        total += capa.precio;
+        contenedor.innerHTML += `
+            <div class="flex justify-between items-center bg-stone-900/90 border border-stone-800 px-3 py-2 rounded-xl text-xs">
+                <div class="flex items-center gap-2">
+                    <span class="font-mono text-[10px] text-amber-400 font-bold">#${index + 1}</span>
+                    <span class="text-stone-200 font-bold">${capa.nombre}</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="font-mono text-amber-400">+$${capa.precio.toFixed(2)}</span>
+                    <button onclick="eliminarCapaPorUuid('${capa.uuid}')" class="w-5 h-5 bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white rounded-md flex items-center justify-center transition-colors font-bold text-[10px] cursor-pointer">✕</button>
+                </div>
+            </div>`;
+    });
+
+    document.getElementById('precio-total-3d').innerText = `$${total.toFixed(2)}`;
+    window.precioFinal3D = total;
+}
+
+function crearPanBeigeOscuroConPuntitos(esSuperior = false) {
+    const grupoPan = new THREE.Group();
+    const materialPan = new THREE.MeshStandardMaterial({ color: 0x8c6747, roughness: 0.55 });
+    
+    if (!esSuperior) {
+        const geoBase = new THREE.CylinderGeometry(2.3, 2.45, 0.6, 32);
+        grupoPan.add(new THREE.Mesh(geoBase, materialPan));
+    } else {
+        const geoSup = new THREE.SphereGeometry(2.3, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+        const meshSup = new THREE.Mesh(geoSup, materialPan);
+        meshSup.scale.set(1, 0.75, 1);
+        grupoPan.add(meshSup);
+
+        const materialPuntito = new THREE.MeshStandardMaterial({ color: 0x3d2715 });
+        const totalPuntitos = 28;
+        for(let i = 0; i < totalPuntitos; i++) {
+            const geoPunto = new THREE.SphereGeometry(0.05, 8, 8);
+            const meshPunto = new THREE.Mesh(geoPunto, materialPuntito);
+            const phi = Math.acos(-1 + (2 * i) / totalPuntitos) * 0.5;
+            const theta = Math.sqrt(totalPuntitos * Math.PI) * phi;
+            const radioDist = 1.6 * Math.sin(phi);
+            meshPunto.position.set(radioDist * Math.cos(theta), 1.1 + (Math.cos(phi) * 0.4), radioDist * Math.sin(theta));
+            grupoPan.add(meshPunto);
+        }
+    }
+    return grupoPan;
+}
+
+function actualizarEscena3D() {
+    if(!hamburguesaGrupo) return;
+    while(hamburguesaGrupo.children.length > 0){ hamburguesaGrupo.remove(hamburguesaGrupo.children[0]); }
+
+    let alturaActualY = -2.2;
+    const panBaseMesh = crearPanBeigeOscuroConPuntitos(false);
+    panBaseMesh.position.y = alturaActualY;
+    hamburguesaGrupo.add(panBaseMesh);
+    alturaActualY += 0.5;
+
+    capasActuales.forEach((capa) => {
+        let meshCapa;
+        let colorHex = parseInt((capa.color || '#c47622').replace('#', '0x'));
+        const matCapa = new THREE.MeshStandardMaterial({ color: colorHex, roughness: 0.4 });
+
+        if (capa.tipo === 'cilindro') {
+            meshCapa = new THREE.Mesh(new THREE.CylinderGeometry(2.35, 2.35, 0.45, 32), matCapa);
+            alturaActualY += 0.35;
+        } else if (capa.tipo === 'slab') {
+            meshCapa = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.15, 3.6), matCapa);
+            alturaActualY += 0.2;
+        } else if (capa.tipo === 'huevo_frito') {
+            const grupoHuevo = new THREE.Group();
+            grupoHuevo.add(new THREE.Mesh(new THREE.CylinderGeometry(2.4, 2.4, 0.12, 32), new THREE.MeshStandardMaterial({ color: 0xffffff })));
+            const meshYema = new THREE.Mesh(new THREE.SphereGeometry(0.9, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0xffaa00 }));
+            meshYema.scale.set(1, 0.5, 1);
+            meshYema.position.set(0.4, 0.06, -0.3);
+            grupoHuevo.add(meshYema);
+            meshCapa = grupoHuevo;
+            alturaActualY += 0.2;
+        } else {
+            meshCapa = new THREE.Mesh(new THREE.CylinderGeometry(2.35, 2.35, 0.2, 32), matCapa);
+            alturaActualY += 0.2;
+        }
+
+        meshCapa.position.y = alturaActualY;
+        hamburguesaGrupo.add(meshCapa);
+        alturaActualY += 0.2;
+    });
+
+    const panSupMesh = crearPanBeigeOscuroConPuntitos(true);
+    panSupMesh.position.y = alturaActualY + 0.1;
+    hamburguesaGrupo.add(panSupMesh);
+}
+
+function enviarCreacion3DAlCarrito() {
+    if (capasActuales.length === 0) {
+        alert("Arma tu hamburguesa 3D agregando al menos un ingrediente.");
+        return;
+    }
+    const nombres = capasActuales.map(i => i.nombre).join(', ');
+    
+    // Guardamos los IDs reales y la estructura para que la RPC los procese en el backend
+    carrito.push({
+        titulo: `🍔 Burger 3D Real (${nombres})`,
+        precio: window.precioFinal3D || 1.00,
+        imagen_url: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=600",
+        idsIngredientes: capasActuales.map(c => c.id) // Guardamos los UUIDs exactos
+    });
+    
+    document.getElementById('contador-carrito-badge').innerText = carrito.length;
+    alert("¡Hamburguesa 3D agregada con éxito al carrito!");
+    capasActuales = [];
+    cambiarPantalla('vitrina');
+}
+
+function renderizarCarrito() {
+    const cont = document.getElementById('lista-items-carrito');
+    const contAbajo = document.getElementById('cantidad-items-abajo');
+    if(!cont) return;
+    cont.innerHTML = "";
+    let total = 0;
+    if(contAbajo) contAbajo.innerText = carrito.length;
+
+    if(carrito.length === 0) {
+        cont.innerHTML = `<div class="p-8 text-center text-stone-500 font-mono text-xs">Tu bolsa está vacía.</div>`;
+        document.getElementById('carrito-monto-total').innerText = "$0.00";
+        if(document.getElementById('carrito-subtotal-monto-abajo')) document.getElementById('carrito-subtotal-monto-abajo').innerText = "$0.00";
+        return;
+    }
+
+    carrito.forEach((item, idx) => {
+        total += item.precio;
+        cont.innerHTML += `
+            <div class="flex justify-between items-center py-4 first:pt-2 last:pb-2">
+                <div class="flex items-center gap-3">
+                    <img src="${item.imagen_url}" class="w-12 h-12 object-cover rounded-xl border border-stone-800">
+                    <div>
+                        <h4 class="text-xs font-bold text-white font-futurista uppercase">${item.titulo}</h4>
+                        <button onclick="carrito.splice(${idx},1);renderizarCarrito();document.getElementById('contador-carrito-badge').innerText=carrito.length;" class="text-[10px] text-red-400 hover:underline cursor-pointer">Eliminar</button>
+                    </div>
+                </div>
+                <span class="font-mono text-amber-400 font-bold">$${item.precio.toFixed(2)}</span>
+            </div>`;
+    });
+    document.getElementById('carrito-monto-total').innerText = `$${total.toFixed(2)}`;
+    if(document.getElementById('carrito-subtotal-monto-abajo')) document.getElementById('carrito-subtotal-monto-abajo').innerText = `$${total.toFixed(2)}`;
+}
+
+async function cargarCuentasPago() {
+    const sel = document.getElementById('select-metodo-pago');
+    if(!sel) return;
+    const { data } = await supabaseClient.from('cuentas_pago').select('*');
+    if(data) {
+        cuentasDB = data;
+        sel.innerHTML = "<option value=''>-- Seleccionar Método --</option>";
+        data.forEach((c, i) => {
+            const plataformaStr = c.plataforma ? c.plataforma.toUpperCase() : 'MÉTODO';
+            const bancoStr = c.banco ? ` - ${c.banco}` : '';
+            sel.innerHTML += `<option value="${i}">[${plataformaStr}]${bancoStr}</option>`;
+        });
+    }
+}
+
+function mostrarDetallesBanco() {
+    const idx = document.getElementById('select-metodo-pago').value;
+    const caja = document.getElementById('caja-banco-detalle');
+    if(!caja) return;
+    if(idx === "" || !cuentasDB[idx]) { caja.classList.add('hidden'); return; }
+    const c = cuentasDB[idx];
+    caja.classList.remove('hidden');
+    caja.innerHTML = `
+        <div><b>Banco:</b> ${c.banco || 'N/A'}</div>
+        <div><b>Titular:</b> ${c.titular || 'N/A'}</div>
+        <div><b>CI/RIF:</b> ${c.ci || 'N/A'}</div>
+        <div><b>Teléfono:</b> ${c.telefono || 'N/A'}</div>
+        ${c.detalles ? `<div class="italic text-stone-400 mt-1">${c.detalles}</div>` : ''}
+    `;
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const codigoReferido = urlParams.get('ref');
+
+    if (codigoReferido) {
+        localStorage.setItem('dunig_ref_code', codigoReferido);
+    }
+
+    const refGuardado = localStorage.getItem('dunig_ref_code');
+    if (refGuardado) {
+        const badge = document.getElementById('badge-referido');
+        const textRef = document.getElementById('text-codigo-ref');
+        const displayRef = document.getElementById('display-codigo-referido');
+        const contenedorRef = document.getElementById('contenedor-ref-info');
+
+        if(badge) { badge.classList.remove('hidden'); badge.classList.add('flex'); }
+        if(textRef) textRef.innerText = refGuardado;
+        if(displayRef) displayRef.innerText = refGuardado;
+        if(contenedorRef) contenedorRef.classList.remove('hidden');
+    }
+
+    descargarCatalogoDeSupabase();
+    descargarAdicionalesDeSupabase();
+    lucide.createIcons();
+});
+
+async function finalizarOrdenWhatsApp() {
     if(carrito.length === 0) { alert("Agrega productos primero."); return; }
     const ref = document.getElementById('input-ref-pago').value.trim();
     const idx = document.getElementById('select-metodo-pago').value;
@@ -810,15 +801,19 @@
     const codigoReferidoCliente = localStorage.getItem('dunig_ref_code') || 'NINGUNO';
     const cuenta = cuentasDB[idx];
 
-    // 1. Extraemos ÚNICAMENTE los IDs de los elementos del carrito para enviarlos al servidor de forma segura
-    // (Asumiendo que tus elementos en el carrito tienen una propiedad 'id' que coincide con la base de datos)
-    const idsIngredientes = carrito.map(i => i.id);
+    // Recolectamos todos los IDs de ingredientes de los elementos del carrito que tengan 3D
+    let idsIngredientes = [];
+    carrito.forEach(item => {
+        if(item.idsIngredientes && Array.isArray(item.idsIngredientes)) {
+            idsIngredientes = idsIngredientes.concat(item.idsIngredientes);
+        }
+    });
 
     let wsNum = "584120000000";
     const { data: ajustesData } = await supabaseClient.from('ajustes_sistema').select('valor').eq('id', 'whatsapp_notificaciones').single();
     if(ajustesData && ajustesData.valor) wsNum = ajustesData.valor.replace(/[^0-9]/g, "");
 
-    // 2. LLAMADA RPC SEGURA: Enviamos los IDs a Supabase para que calcule el total real en el backend
+    // Llamada RPC Segura a Supabase
     const { data: resultadoRpc, error: errorRpc } = await supabaseClient.rpc('crear_orden_segura', {
         p_referencia: ref,
         p_codigo_referido: codigoReferidoCliente,
@@ -830,14 +825,11 @@
         return;
     }
 
-    // 3. Obtenemos el total y la lista oficial calculados por la base de datos (Imposible de alterar por el usuario)
     const totalReal = resultadoRpc.total;
     const listaProductosReal = resultadoRpc.productos;
 
-    // Generamos el mensaje de WhatsApp usando los datos validados del servidor
     const mensaje = `🍔 *PEDIDO VIP - PIZZA PLANETA* 🍔\n\n• ${listaProductosReal}\n\n💵 *TOTAL:* $${totalReal.toFixed(2)}\n🏦 *PAGO:* ${cuenta.plataforma} (${cuenta.banco})\n🔢 *REF:* ${ref}\n🎁 *REF. CLIENTE:* ${codigoReferidoCliente}`;
 
-    // Limpieza de interfaz y variables locales
     carrito = [];
     document.getElementById('contador-carrito-badge').innerText = "0";
     document.getElementById('input-ref-pago').value = "";
