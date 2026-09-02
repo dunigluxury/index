@@ -795,10 +795,10 @@ async function finalizarOrdenWhatsApp() {
             const ref = document.getElementById('input-ref-pago').value.trim();
             const idx = document.getElementById('select-metodo-pago').value;
 
-            if(idx === "" || !window.cuentasDB || !window.cuentasDB[idx]) { alert("Selecciona método de pago."); return; }
+            if(idx === "" || !cuentasDB[idx]) { alert("Selecciona un método de pago."); return; }
             if(!/^\d{12}$/.test(ref)) { alert("Inserta un número de referencia válido de exactamente 12 dígitos."); return; }
 
-            const cuenta = window.cuentasDB[idx];
+            const cuenta = cuentasDB[idx];
             let total = carrito.reduce((a, b) => a + b.precio, 0);
             let lista = carrito.map(i => `• ${i.titulo} ($${i.precio.toFixed(2)})`).join('\n');
 
@@ -806,7 +806,7 @@ async function finalizarOrdenWhatsApp() {
             const { data } = await supabaseClient.from('ajustes_sistema').select('valor').eq('id', 'whatsapp_notificaciones').single();
             if(data && data.valor) wsNum = data.valor.replace(/[^0-9]/g, "");
 
-            const mensaje = `🍔 *PEDIDO 3D REAL - PIZZA PLANETA* 🍔\n\n${lista}\n\n💵 *TOTAL:* $${total.toFixed(2)}\n🏦 *PAGO:* ${cuenta.plataforma} (${cuenta.banco})\n🔢 *REF:* ${ref}`;
+            const mensaje = `🍔 *PEDIDO VIP - PIZZA PLANETA* 🍔\n\n${lista}\n\n💵 *TOTAL:* $${total.toFixed(2)}\n🏦 *PAGO:* ${cuenta.plataforma} (${cuenta.banco})\n🔢 *REF:* ${ref}`;
 
             await supabaseClient.from('ordenes_vip').insert([{
                 productos: carrito.map(i => i.titulo).join(', '),
@@ -817,12 +817,14 @@ async function finalizarOrdenWhatsApp() {
 
             carrito = [];
             document.getElementById('contador-carrito-badge').innerText = "0";
+            document.getElementById('input-ref-pago').value = "";
             cambiarPantalla('vitrina');
             window.open(`https://api.whatsapp.com/send?phone=${wsNum}&text=${encodeURIComponent(mensaje)}`, '_blank');
         }
 
         window.addEventListener('DOMContentLoaded', () => {
-            cargarCatalogoSupabase();
+            descargarCatalogoDeSupabase();
+            descargarAdicionalesDeSupabase();
             lucide.createIcons();
         });
     </script>
