@@ -791,53 +791,40 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 async function finalizarOrdenWhatsApp() {
-    if(carrito.length === 0) { alert("Agrega productos primero."); return; }
-    const ref = document.getElementById('input-ref-pago').value.trim();
-    const idx = document.getElementById('select-metodo-pago').value;
+            if(carrito.length === 0) { alert("Agrega productos primero."); return; }
+            const ref = document.getElementById('input-ref-pago').value.trim();
+            const idx = document.getElementById('select-metodo-pago').value;
 
-    if(idx === "" || !cuentasDB[idx]) { alert("Selecciona un método de pago."); return; }
-    if(!/^\d{12}$/.test(ref)) { alert("Inserta un número de referencia válido de exactamente 12 dígitos."); return; }
+            if(idx === "" || !window.cuentasDB || !window.cuentasDB[idx]) { alert("Selecciona método de pago."); return; }
+            if(!/^\d{12}$/.test(ref)) { alert("Inserta un número de referencia válido de exactamente 12 dígitos."); return; }
 
-    const codigoReferidoCliente = localStorage.getItem('dunig_ref_code') || 'NINGUNO';
-    const cuenta = cuentasDB[idx];
+            const cuenta = window.cuentasDB[idx];
+            let total = carrito.reduce((a, b) => a + b.precio, 0);
+            let lista = carrito.map(i => `• ${i.titulo} ($${i.precio.toFixed(2)})`).join('\n');
 
-    let idsIngredientes = [];
-    carrito.forEach(item => {
-        if(item.idsIngredientes && Array.isArray(item.idsIngredientes)) {
-            // Solo aceptamos strings largos que parezcan UUIDs y filtramos números sueltos como "51" o "44"
-            const idsValidos = item.idsIngredientes.filter(id => typeof id === 'string' && id.length > 20);
-            idsIngredientes = idsIngredientes.concat(idsValidos);
+            let wsNum = "584120000000";
+            const { data } = await supabaseClient.from('ajustes_sistema').select('valor').eq('id', 'whatsapp_notificaciones').single();
+            if(data && data.valor) wsNum = data.valor.replace(/[^0-9]/g, "");
+
+            const mensaje = `🍔 *PEDIDO 3D REAL - PIZZA PLANETA* 🍔\n\n${lista}\n\n💵 *TOTAL:* $${total.toFixed(2)}\n🏦 *PAGO:* ${cuenta.plataforma} (${cuenta.banco})\n🔢 *REF:* ${ref}`;
+
+            await supabaseClient.from('ordenes_vip').insert([{
+                productos: carrito.map(i => i.titulo).join(', '),
+                total: total,
+                referencia: ref,
+                estado: "Pendiente"
+            }]);
+
+            carrito = [];
+            document.getElementById('contador-carrito-badge').innerText = "0";
+            cambiarPantalla('vitrina');
+            window.open(`https://api.whatsapp.com/send?phone=${wsNum}&text=${encodeURIComponent(mensaje)}`, '_blank');
         }
-    });
 
-    let wsNum = "584120000000";
-    const { data: ajustesData } = await supabaseClient.from('ajustes_sistema').select('valor').eq('id', 'whatsapp_notificaciones').single();
-    if(ajustesData && ajustesData.valor) wsNum = ajustesData.valor.replace(/[^0-9]/g, "");
-
-    const { data: resultadoRpc, error: errorRpc } = await supabaseClient.rpc('crear_orden_segura', {
-        p_referencia: ref,
-        p_codigo_referido: codigoReferidoCliente,
-        p_ingredientes_ids: idsIngredientes
-    });
-
-    if (errorRpc) {
-        alert("Hubo un error al procesar la orden de forma segura: " + errorRpc.message);
-        return;
-    }
-
-    const totalReal = resultadoRpc.total;
-    const listaProductosReal = resultadoRpc.productos;
-
-    const mensaje = `🍔 *PEDIDO VIP - PIZZA PLANETA* 🍔\n\n• ${listaProductosReal}\n\n💵 *TOTAL:* $${totalReal.toFixed(2)}\n🏦 *PAGO:* ${cuenta.plataforma} (${cuenta.banco})\n🔢 *REF:* ${ref}\n🎁 *REF. CLIENTE:* ${codigoReferidoCliente}`;
-
-    carrito = [];
-    document.getElementById('contador-carrito-badge').innerText = "0";
-    document.getElementById('input-ref-pago').value = "";
-    localStorage.removeItem('dunig_ref_code'); 
-    
-    cambiarPantalla('vitrina');
-    window.open(`https://api.whatsapp.com/send?phone=${wsNum}&text=${encodeURIComponent(mensaje)}`, '_blank');
-}
+        window.addEventListener('DOMContentLoaded', () => {
+            cargarCatalogoSupabase();
+            lucide.createIcons();
+        });
     </script>
 </body>
 </html>
