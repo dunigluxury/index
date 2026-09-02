@@ -801,30 +801,23 @@ async function finalizarOrdenWhatsApp() {
     const codigoReferidoCliente = localStorage.getItem('dunig_ref_code') || 'NINGUNO';
     const cuenta = cuentasDB[idx];
 
-    // Recolectamos todos los IDs y filtramos solo los que parezcan UUIDs válidos o los convertimos a texto seguro, 
-    // ignorando números sueltos (como "40" u otros índices de productos planos).
     let idsIngredientes = [];
     carrito.forEach(item => {
         if(item.idsIngredientes && Array.isArray(item.idsIngredientes)) {
-            idsIngredientes = idsIngredientes.concat(item.idsIngredientes);
-        } else if (item.id) {
-            // Si el item tiene un id plano, verificamos que sea un UUID antes de meterlo
-            idsIngredientes.push(item.id);
+            // Solo aceptamos strings largos que parezcan UUIDs y filtramos números sueltos como "51" o "44"
+            const idsValidos = item.idsIngredientes.filter(id => typeof id === 'string' && id.length > 20);
+            idsIngredientes = idsIngredientes.concat(idsValidos);
         }
     });
-
-    // Limpieza estricta: nos aseguramos de mandar solo strings limpios para evitar cualquier choque en Supabase
-    let idsLimpios = idsIngredientes.map(id => String(id));
 
     let wsNum = "584120000000";
     const { data: ajustesData } = await supabaseClient.from('ajustes_sistema').select('valor').eq('id', 'whatsapp_notificaciones').single();
     if(ajustesData && ajustesData.valor) wsNum = ajustesData.valor.replace(/[^0-9]/g, "");
 
-    // Llamada RPC Segura a Supabase con los IDs limpios
     const { data: resultadoRpc, error: errorRpc } = await supabaseClient.rpc('crear_orden_segura', {
         p_referencia: ref,
         p_codigo_referido: codigoReferidoCliente,
-        p_ingredientes_ids: idsLimpios
+        p_ingredientes_ids: idsIngredientes
     });
 
     if (errorRpc) {
