@@ -304,7 +304,7 @@
 
         let scene, camera, renderer, hamburguesaGrupo;
 
-        // Variables de Mapa y Delivery por GPS Obligatorio
+        // Variables de Mapa y Delivery por GPS Obligatorio con Tarifa Dinámica
         let mapaDelivery = null;
         let marcadorCliente = null;
         let costoDeliveryKm = 0;
@@ -313,9 +313,23 @@
         let gpsClienteLng = null;
         const LOCAL_LAT = 8.5897;  // Coordenadas base en Mérida / Ejido
         const LOCAL_LNG = -71.1418;
-        const TARIFA_POR_KM = 0.80; // Costo por kilómetro recorrido
+        let TARIFA_POR_KM = 0.80; // Tarifa por defecto de respaldo
 
-        function cambiarPantalla(nombre) {
+        // Función para cargar la tarifa de delivery desde Supabase
+        async function cargarTarifaDeliveryDesdeSupabase() {
+            const { data, error } = await supabaseClient
+                .from('tarifa_delivery')
+                .select('precio_por_km')
+                .order('id', { ascending: false })
+                .limit(1)
+                .single();
+                
+            if (!error && data && data.precio_por_km !== undefined) {
+                TARIFA_POR_KM = parseFloat(data.precio_por_km);
+            }
+        }
+
+        async function cambiarPantalla(nombre) {
             ['vitrina', 'detalle', 'simulador3d', 'carrito'].forEach(v => {
                 const el = document.getElementById(`vista-${v}`);
                 if(el) el.classList.add('hidden');
@@ -339,6 +353,7 @@
                 }, 150);
             }
             if (nombre === 'carrito') {
+                await cargarTarifaDeliveryDesdeSupabase(); // Carga la tarifa dinámica desde Supabase
                 renderizarCarrito();
                 cargarCuentasPago();
                 setTimeout(() => {
@@ -805,7 +820,6 @@
                 },
                 (error) => {
                     console.warn("No se pudo obtener la ubicación GPS automática:", error.message);
-                    // Si falla, dejamos la posición por defecto de Mérida y pedimos mover el pin
                     actualizarCoordenadasCliente(LOCAL_LAT, LOCAL_LNG);
                 },
                 { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
