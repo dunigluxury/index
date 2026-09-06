@@ -193,7 +193,7 @@
         </div>
     </main>
 
-    <!-- VISTA 3: CARRITO Y CHECKOUT VIP UNIFICADO CON MAPA INTERACTIVO -->
+    <!-- VISTA 3: CARRITO Y CHECKOUT VIP UNIFICADO CON MAPA Y BUSCADOR DE DIRECCIONES -->
     <main id="vista-carrito" class="hidden max-w-7xl w-full mx-auto px-4 py-8 flex-grow relative z-10 grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
         <section class="lg:col-span-3 glass-panel p-6 rounded-3xl space-y-4 shadow-2xl border border-stone-900/60">
             <div class="border-b border-stone-800 pb-3 mb-4 flex justify-between items-end">
@@ -208,13 +208,28 @@
                 <span class="text-white font-black font-mono ml-1" id="carrito-subtotal-monto-abajo">$0.00</span>
             </div>
 
-            <!-- MODULO DE MAPA INTERACTIVO DE DELIVERY -->
+            <!-- MODULO DE MAPA INTERACTIVO Y BUSCADOR DE DIRECCION -->
             <div class="space-y-3 pt-6 border-t border-stone-900">
                 <label class="text-[10px] uppercase text-amber-400 font-bold tracking-widest block font-futurista flex items-center gap-2">
-                    <i data-lucide="map-pin" class="w-4 h-4"></i> Ubicación de Entrega (Mapa GPS en Tiempo Real)
+                    <i data-lucide="map-pin" class="w-4 h-4"></i> Ubicación de Entrega (Buscador & GPS)
                 </label>
-                <p class="text-xs text-stone-400">Mueve el marcador o haz clic en el mapa para fijar tu ubicación exacta. El costo se calculará según la distancia.</p>
+                <p class="text-xs text-stone-400">Escribe tu dirección exacta (ej. Av. Las Américas, Ejido, Mérida) o haz clic en el mapa.</p>
                 
+                <!-- Buscador con Lupa -->
+                <div class="flex gap-2 relative">
+                    <div class="relative flex-grow">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-amber-400">
+                            <i data-lucide="search" class="w-4 h-4"></i>
+                        </span>
+                        <input type="text" id="input-buscar-direccion" placeholder="Ej. Urbanización Los Curos, Mérida..." class="w-full bg-stone-900 border border-stone-800 text-xs text-white pl-9 pr-3 py-3 rounded-xl focus:outline-none focus:border-amber-500/60 font-medium">
+                    </div>
+                    <button onclick="buscarDireccionNominatim()" class="bg-amber-500 hover:bg-amber-600 text-black font-futurista font-black px-5 py-3 rounded-xl text-xs uppercase tracking-wider transition-colors cursor-pointer shrink-0">
+                        Buscar
+                    </button>
+                    <!-- Resultados desplegables del autocompletado -->
+                    <div id="lista-sugerencias-direccion" class="hidden absolute top-full left-0 right-0 mt-1 bg-stone-900 border border-stone-800 rounded-xl shadow-2xl z-50 max-h-48 overflow-y-auto divide-y divide-stone-800"></div>
+                </div>
+
                 <!-- Contenedor del Mapa Leaflet -->
                 <div id="mapa-delivery" class="w-full h-64 rounded-2xl border border-stone-800 relative z-10 bg-stone-950"></div>
                 
@@ -307,6 +322,7 @@
         const LOCAL_LAT = 8.5897;  // Coordenadas base en Mérida / Ejido
         const LOCAL_LNG = -71.1418;
         const TARIFA_POR_KM = 0.80; // Costo por kilómetro recorrido
+        let direccionTextoCliente = "Ubicación en mapa";
 
         function cambiarPantalla(nombre) {
             ['vitrina', 'detalle', 'simulador3d', 'carrito'].forEach(v => {
@@ -738,7 +754,7 @@
         }
 
         // ==========================================
-        // MÓDULO DE MAPA LEAFLET Y CÁLCULO POR KM
+        // MÓDULO DE MAPA LEAFLET Y BUSCADOR NOMINATIM
         // ==========================================
         function inicializarMapaDelivery() {
             const contenedorMapa = document.getElementById('mapa-delivery');
@@ -772,7 +788,96 @@
                 calcularDistanciaYPrecio(e.latlng.lat, e.latlng.lng);
             });
 
+            configurarBuscadorNominatim();
             calcularDistanciaYPrecio(LOCAL_LAT, LOCAL_LNG);
+        }
+
+        function configurarBuscadorNominatim() {
+            const inputDir = document.getElementById('input-buscar-direccion');
+            const listaSugerencias = document.getElementById('lista-sugerencias-direccion');
+            if (!inputDir || !listaSugerencias) return;
+
+            let timeoutId = null;
+
+            inputDir.addEventListener('input', function() {
+                clearTimeout(timeoutId);
+                const query = inputDir.value.trim();
+                if (query.length < 3) {
+                    listaSugerencias.classList.add('hidden');
+                    return;
+                }
+
+                timeoutId = setTimeout(async () => {
+                    try {
+                        // Buscamos priorizando Mérida, Venezuela
+                        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query + ", Mérida, Venezuela")}&limit=5`;
+                        const res = await fetch(url);
+                        const data = await res.json();
+
+                        listaSugerencias.innerHTML = "";
+                        if (data && data.length > 0) {
+                            listaSugerencias.classList.remove('hidden');
+                            data.forEach(place => {
+                                const div = document.createElement('div');
+                                div.className = "p-2.5 text-xs text-stone-300 hover:bg-stone-800 cursor-pointer truncate";
+                                div.innerText = place.display_name;
+                                div.onclick = () => {
+                                    seleccionarUbicacionEnMapa(parseFloat(place.lat), parseFloat(place.lon), place.display_name);
+                                };
+                                listaSugerencias.appendChild(div);
+                            });
+                        } else {
+                            listaSugerencias.classList.add('hidden');
+                        }
+                    } catch (e) {
+                        console.error("Error buscando dirección:", e);
+                    }
+                }, 350);
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!inputDir.contains(e.target) && !listaSugerencias.contains(e.target)) {
+                    listaSugerencias.classList.add('hidden');
+                }
+            });
+        }
+
+        async function buscarDireccionNominatim() {
+            const inputDir = document.getElementById('input-buscar-direccion');
+            if(!inputDir) return;
+            const query = inputDir.value.trim();
+            if(!query) { alert("Escribe una dirección válida en el buscador."); return; }
+
+            try {
+                const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query + ", Mérida, Venezuela")}&limit=1`;
+                const res = await fetch(url);
+                const data = await res.json();
+
+                if (data && data.length > 0) {
+                    const place = data[0];
+                    seleccionarUbicacionEnMapa(parseFloat(place.lat), parseFloat(place.lon), place.display_name);
+                } else {
+                    alert("No se encontró la dirección exacta. Intenta especificar más el sector o ciudad en Mérida.");
+                }
+            } catch (e) {
+                console.error("Error en búsqueda:", e);
+                alert("Error al conectar con el servicio de geocodificación.");
+            }
+        }
+
+        function seleccionarUbicacionEnMapa(lat, lon, nombreLugar) {
+            const inputDir = document.getElementById('input-buscar-direccion');
+            const listaSugerencias = document.getElementById('lista-sugerencias-direccion');
+            
+            if(inputDir) inputDir.value = nombreLugar;
+            if(listaSugerencias) listaSugerencias.classList.add('hidden');
+
+            direccionTextoCliente = nombreLugar;
+            if(marcadorCliente) {
+                marcadorCliente.setLatLng([lat, lon]);
+                mapaDelivery.setView([lat, lon], 16);
+                calcularDistanciaYPrecio(lat, lon);
+            }
         }
 
         function calcularDistanciaEnKm(lat1, lon1, lat2, lon2) {
@@ -835,7 +940,6 @@
                     </div>`;
             });
 
-            // Sumar subtotal de productos + costo de delivery calculado por KM
             let totalGeneral = subtotalProductos + costoDeliveryKm;
             document.getElementById('carrito-monto-total').innerText = `$${totalGeneral.toFixed(2)}`;
             if(document.getElementById('carrito-subtotal-monto-abajo')) {
@@ -914,7 +1018,7 @@
             const { data } = await supabaseClient.from('ajustes_sistema').select('valor').eq('id', 'whatsapp_notificaciones').single();
             if(data && data.valor) wsNum = data.valor.replace(/[^0-9]/g, "");
 
-            const mensaje = `🍔 *PEDIDO VIP - CASA DE LAS PAPAS* 🍔\n\n${lista}\n\n📦 *Subtotal:* $${subtotalProductos.toFixed(2)}\n🛵 *Delivery (${distanciaCalculadaKm.toFixed(2)} km):* $${costoDeliveryKm.toFixed(2)}\n💵 *TOTAL A PAGAR:* $${totalGeneral.toFixed(2)}\n🏦 *PAGO:* ${cuenta.plataforma} (${cuenta.banco})\n🔢 *REF:* ${ref}\n🎁 *REF. CLIENTE:* ${codigoReferidoCliente}`;
+            const mensaje = `🍔 *PEDIDO VIP - CASA DE LAS PAPAS* 🍔\n\n${lista}\n\n📍 *Dirección/Zona:* ${direccionTextoCliente}\n📦 *Subtotal:* $${subtotalProductos.toFixed(2)}\n🛵 *Delivery (${distanciaCalculadaKm.toFixed(2)} km):* $${costoDeliveryKm.toFixed(2)}\n💵 *TOTAL A PAGAR:* $${totalGeneral.toFixed(2)}\n🏦 *PAGO:* ${cuenta.plataforma} (${cuenta.banco})\n🔢 *REF:* ${ref}\n🎁 *REF. CLIENTE:* ${codigoReferidoCliente}`;
 
             await supabaseClient.from('ordenes_vip').insert([{
                 productos: carrito.map(i => i.titulo).join(', '),
