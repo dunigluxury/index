@@ -85,7 +85,7 @@
         <div id="grid-productos-vitrina" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
     </main>
 
-    <!-- VISTA DETALLE DE PRODUCTO (Catálogo Integrado) -->
+    <!-- VISTA DETALLE DE PRODUCTO -->
     <main id="vista-detalle" class="hidden max-w-7xl w-full mx-auto px-4 py-8 flex-grow relative z-10">
         <button onclick="cambiarPantalla('vitrina')" class="mb-6 flex items-center gap-2 text-xs font-futurista uppercase tracking-widest text-stone-400 hover:text-amber-400 font-bold cursor-pointer transition-colors">
             <i data-lucide="arrow-left" class="w-4 h-4"></i> Volver al Catálogo
@@ -193,7 +193,7 @@
         </div>
     </main>
 
-    <!-- VISTA 3: CARRITO Y CHECKOUT VIP UNIFICADO CON MAPA Y BUSCADOR DE DIRECCIONES -->
+    <!-- VISTA 3: CARRITO Y CHECKOUT VIP UNIFICADO CON MAPA GPS OBLIGATORIO -->
     <main id="vista-carrito" class="hidden max-w-7xl w-full mx-auto px-4 py-8 flex-grow relative z-10 grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
         <section class="lg:col-span-3 glass-panel p-6 rounded-3xl space-y-4 shadow-2xl border border-stone-900/60">
             <div class="border-b border-stone-800 pb-3 mb-4 flex justify-between items-end">
@@ -208,28 +208,18 @@
                 <span class="text-white font-black font-mono ml-1" id="carrito-subtotal-monto-abajo">$0.00</span>
             </div>
 
-            <!-- MODULO DE MAPA INTERACTIVO Y BUSCADOR DE DIRECCION -->
+            <!-- MODULO DE MAPA INTERACTIVO Y GPS OBLIGATORIO -->
             <div class="space-y-3 pt-6 border-t border-stone-900">
-                <label class="text-[10px] uppercase text-amber-400 font-bold tracking-widest block font-futurista flex items-center gap-2">
-                    <i data-lucide="map-pin" class="w-4 h-4"></i> Ubicación de Entrega (Buscador & GPS)
-                </label>
-                <p class="text-xs text-stone-400">Escribe tu dirección exacta (ej. Av. Las Américas, Ejido, Mérida) o haz clic en el mapa.</p>
-                
-                <!-- Buscador con Lupa -->
-                <div class="flex gap-2 relative">
-                    <div class="relative flex-grow">
-                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-amber-400">
-                            <i data-lucide="search" class="w-4 h-4"></i>
-                        </span>
-                        <input type="text" id="input-buscar-direccion" placeholder="Ej. Urbanización Los Curos, Mérida..." class="w-full bg-stone-900 border border-stone-800 text-xs text-white pl-9 pr-3 py-3 rounded-xl focus:outline-none focus:border-amber-500/60 font-medium">
-                    </div>
-                    <button onclick="buscarDireccionNominatim()" class="bg-amber-500 hover:bg-amber-600 text-black font-futurista font-black px-5 py-3 rounded-xl text-xs uppercase tracking-wider transition-colors cursor-pointer shrink-0">
-                        Buscar
+                <div class="flex justify-between items-center">
+                    <label class="text-[10px] uppercase text-amber-400 font-bold tracking-widest block font-futurista flex items-center gap-2">
+                        <i data-lucide="map-pin" class="w-4 h-4"></i> Ubicación de Entrega GPS (Obligatorio)
+                    </label>
+                    <button type="button" onclick="obtenerUbicacionGPSActual()" class="bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-black border border-amber-500/40 px-3 py-1 rounded-xl text-[10px] font-futurista font-bold tracking-wider uppercase flex items-center gap-1.5 transition-all cursor-pointer">
+                        <i data-lucide="locate-fixed" class="w-3.5 h-3.5"></i> 📍 Usar mi GPS actual
                     </button>
-                    <!-- Resultados desplegables del autocompletado -->
-                    <div id="lista-sugerencias-direccion" class="hidden absolute top-full left-0 right-0 mt-1 bg-stone-900 border border-stone-800 rounded-xl shadow-2xl z-50 max-h-48 overflow-y-auto divide-y divide-stone-800"></div>
                 </div>
-
+                <p class="text-xs text-stone-400">Tu ubicación exacta se capturará automáticamente del GPS de tu dispositivo para calcular el costo de envío exacto.</p>
+                
                 <!-- Contenedor del Mapa Leaflet -->
                 <div id="mapa-delivery" class="w-full h-64 rounded-2xl border border-stone-800 relative z-10 bg-stone-950"></div>
                 
@@ -314,15 +304,16 @@
 
         let scene, camera, renderer, hamburguesaGrupo;
 
-        // Variables de Mapa y Delivery por KM
+        // Variables de Mapa y Delivery por GPS Obligatorio
         let mapaDelivery = null;
         let marcadorCliente = null;
         let costoDeliveryKm = 0;
         let distanciaCalculadaKm = 0;
+        let gpsClienteLat = null;
+        let gpsClienteLng = null;
         const LOCAL_LAT = 8.5897;  // Coordenadas base en Mérida / Ejido
         const LOCAL_LNG = -71.1418;
         const TARIFA_POR_KM = 0.80; // Costo por kilómetro recorrido
-        let direccionTextoCliente = "Ubicación en mapa";
 
         function cambiarPantalla(nombre) {
             ['vitrina', 'detalle', 'simulador3d', 'carrito'].forEach(v => {
@@ -351,8 +342,11 @@
                 renderizarCarrito();
                 cargarCuentasPago();
                 setTimeout(() => {
-                    if (!mapaDelivery) inicializarMapaDelivery();
-                    else mapaDelivery.invalidateSize();
+                    if (!mapaDelivery) {
+                        inicializarMapaDelivery();
+                    } else {
+                        mapaDelivery.invalidateSize();
+                    }
                 }, 200);
             }
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -754,7 +748,7 @@
         }
 
         // ==========================================
-        // MÓDULO DE MAPA LEAFLET Y BUSCADOR NOMINATIM
+        // MÓDULO DE MAPA LEAFLET Y GPS OBLIGATORIO
         // ==========================================
         function inicializarMapaDelivery() {
             const contenedorMapa = document.getElementById('mapa-delivery');
@@ -780,104 +774,60 @@
 
             marcadorCliente.on('dragend', function (e) {
                 const pos = marcadorCliente.getLatLng();
-                calcularDistanciaYPrecio(pos.lat, pos.lng);
+                actualizarCoordenadasCliente(pos.lat, pos.lng);
             });
 
             mapaDelivery.on('click', function (e) {
                 marcadorCliente.setLatLng(e.latlng);
-                calcularDistanciaYPrecio(e.latlng.lat, e.latlng.lng);
+                actualizarCoordenadasCliente(e.latlng.lat, e.latlng.lng);
             });
 
-            configurarBuscadorNominatim();
-            calcularDistanciaYPrecio(LOCAL_LAT, LOCAL_LNG);
+            // Obtener GPS del navegador automáticamente al abrir el carrito
+            obtenerUbicacionGPSActual();
         }
 
-        function configurarBuscadorNominatim() {
-            const inputDir = document.getElementById('input-buscar-direccion');
-            const listaSugerencias = document.getElementById('lista-sugerencias-direccion');
-            if (!inputDir || !listaSugerencias) return;
+        function obtenerUbicacionGPSActual() {
+            if (!navigator.geolocation) {
+                alert("Tu navegador no soporta geolocalización.");
+                return;
+            }
 
-            let timeoutId = null;
-
-            inputDir.addEventListener('input', function() {
-                clearTimeout(timeoutId);
-                const query = inputDir.value.trim();
-                if (query.length < 3) {
-                    listaSugerencias.classList.add('hidden');
-                    return;
-                }
-
-                timeoutId = setTimeout(async () => {
-                    try {
-                        // Buscamos priorizando Mérida, Venezuela
-                        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query + ", Mérida, Venezuela")}&limit=5`;
-                        const res = await fetch(url);
-                        const data = await res.json();
-
-                        listaSugerencias.innerHTML = "";
-                        if (data && data.length > 0) {
-                            listaSugerencias.classList.remove('hidden');
-                            data.forEach(place => {
-                                const div = document.createElement('div');
-                                div.className = "p-2.5 text-xs text-stone-300 hover:bg-stone-800 cursor-pointer truncate";
-                                div.innerText = place.display_name;
-                                div.onclick = () => {
-                                    seleccionarUbicacionEnMapa(parseFloat(place.lat), parseFloat(place.lon), place.display_name);
-                                };
-                                listaSugerencias.appendChild(div);
-                            });
-                        } else {
-                            listaSugerencias.classList.add('hidden');
-                        }
-                    } catch (e) {
-                        console.error("Error buscando dirección:", e);
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    
+                    if (marcadorCliente && mapaDelivery) {
+                        marcadorCliente.setLatLng([lat, lng]);
+                        mapaDelivery.setView([lat, lng], 15);
+                        actualizarCoordenadasCliente(lat, lng);
                     }
-                }, 350);
-            });
-
-            document.addEventListener('click', (e) => {
-                if (!inputDir.contains(e.target) && !listaSugerencias.contains(e.target)) {
-                    listaSugerencias.classList.add('hidden');
-                }
-            });
+                },
+                (error) => {
+                    console.warn("No se pudo obtener la ubicación GPS automática:", error.message);
+                    // Si falla, dejamos la posición por defecto de Mérida y pedimos mover el pin
+                    actualizarCoordenadasCliente(LOCAL_LAT, LOCAL_LNG);
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
         }
 
-        async function buscarDireccionNominatim() {
-            const inputDir = document.getElementById('input-buscar-direccion');
-            if(!inputDir) return;
-            const query = inputDir.value.trim();
-            if(!query) { alert("Escribe una dirección válida en el buscador."); return; }
-
-            try {
-                const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query + ", Mérida, Venezuela")}&limit=1`;
-                const res = await fetch(url);
-                const data = await res.json();
-
-                if (data && data.length > 0) {
-                    const place = data[0];
-                    seleccionarUbicacionEnMapa(parseFloat(place.lat), parseFloat(place.lon), place.display_name);
-                } else {
-                    alert("No se encontró la dirección exacta. Intenta especificar más el sector o ciudad en Mérida.");
-                }
-            } catch (e) {
-                console.error("Error en búsqueda:", e);
-                alert("Error al conectar con el servicio de geocodificación.");
-            }
-        }
-
-        function seleccionarUbicacionEnMapa(lat, lon, nombreLugar) {
-            const inputDir = document.getElementById('input-buscar-direccion');
-            const listaSugerencias = document.getElementById('lista-sugerencias-direccion');
+        function actualizarCoordenadasCliente(lat, lng) {
+            gpsClienteLat = lat;
+            gpsClienteLng = lng;
             
-            if(inputDir) inputDir.value = nombreLugar;
-            if(listaSugerencias) listaSugerencias.classList.add('hidden');
+            distanciaCalculadaKm = calcularDistanciaEnKm(LOCAL_LAT, LOCAL_LNG, lat, lng);
+            
+            let costoCalculado = distanciaCalculadaKm * TARIFA_POR_KM;
+            if (costoCalculado < 1.00 && distanciaCalculadaKm > 0.1) costoCalculado = 1.00; 
+            if (distanciaCalculadaKm <= 0.1) costoCalculado = 0.00;
 
-            direccionTextoCliente = nombreLugar;
-            if(marcadorCliente) {
-                marcadorCliente.setLatLng([lat, lon]);
-                mapaDelivery.setView([lat, lon], 16);
-                calcularDistanciaYPrecio(lat, lon);
-            }
+            costoDeliveryKm = parseFloat(costoCalculado.toFixed(2));
+
+            document.getElementById('display-km').innerText = `${distanciaCalculadaKm.toFixed(2)} km`;
+            document.getElementById('display-costo-km').innerText = `$${costoDeliveryKm.toFixed(2)}`;
+
+            renderizarCarrito();
         }
 
         function calcularDistanciaEnKm(lat1, lon1, lat2, lon2) {
@@ -890,21 +840,6 @@
                 Math.sin(dLon/2) * Math.sin(dLon/2);
             const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
             return R * c; 
-        }
-
-        function calcularDistanciaYPrecio(latCliente, lonCliente) {
-            distanciaCalculadaKm = calcularDistanciaEnKm(LOCAL_LAT, LOCAL_LNG, latCliente, lonCliente);
-            
-            let costoCalculado = distanciaCalculadaKm * TARIFA_POR_KM;
-            if (costoCalculado < 1.00 && distanciaCalculadaKm > 0.1) costoCalculado = 1.00; 
-            if (distanciaCalculadaKm <= 0.1) costoCalculado = 0.00;
-
-            costoDeliveryKm = parseFloat(costoCalculado.toFixed(2));
-
-            document.getElementById('display-km').innerText = `${distanciaCalculadaKm.toFixed(2)} km`;
-            document.getElementById('display-costo-km').innerText = `$${costoDeliveryKm.toFixed(2)}`;
-
-            renderizarCarrito();
         }
 
         function renderizarCarrito() {
@@ -1001,6 +936,13 @@
 
         async function finalizarOrdenWhatsApp() {
             if(carrito.length === 0) { alert("Agrega productos primero."); return; }
+            
+            // Validar que se tenga la ubicación GPS del cliente obligatoria
+            if(gpsClienteLat === null || gpsClienteLng === null) {
+                alert("Por favor permite o selecciona tu ubicación GPS en el mapa para continuar con la entrega.");
+                return;
+            }
+
             const ref = document.getElementById('input-ref-pago').value.trim();
             const idx = document.getElementById('select-metodo-pago').value;
 
@@ -1013,19 +955,21 @@
             let subtotalProductos = carrito.reduce((a, b) => a + b.precio, 0);
             let totalGeneral = subtotalProductos + costoDeliveryKm;
             let lista = carrito.map(i => `• ${i.titulo} ($${i.precio.toFixed(2)})`).join('\n');
+            const linkGoogleMaps = `https://maps.google.com/?q=${gpsClienteLat},${gpsClienteLng}`;
 
             let wsNum = "584120000000";
             const { data } = await supabaseClient.from('ajustes_sistema').select('valor').eq('id', 'whatsapp_notificaciones').single();
             if(data && data.valor) wsNum = data.valor.replace(/[^0-9]/g, "");
 
-            const mensaje = `🍔 *PEDIDO VIP - CASA DE LAS PAPAS* 🍔\n\n${lista}\n\n📍 *Dirección/Zona:* ${direccionTextoCliente}\n📦 *Subtotal:* $${subtotalProductos.toFixed(2)}\n🛵 *Delivery (${distanciaCalculadaKm.toFixed(2)} km):* $${costoDeliveryKm.toFixed(2)}\n💵 *TOTAL A PAGAR:* $${totalGeneral.toFixed(2)}\n🏦 *PAGO:* ${cuenta.plataforma} (${cuenta.banco})\n🔢 *REF:* ${ref}\n🎁 *REF. CLIENTE:* ${codigoReferidoCliente}`;
+            const mensaje = `🍔 *PEDIDO VIP - CASA DE LAS PAPAS* 🍔\n\n${lista}\n\n📦 *Subtotal:* $${subtotalProductos.toFixed(2)}\n🛵 *Delivery (${distanciaCalculadaKm.toFixed(2)} km):* $${costoDeliveryKm.toFixed(2)}\n💵 *TOTAL A PAGAR:* $${totalGeneral.toFixed(2)}\n📍 *Ubicación GPS:* ${linkGoogleMaps}\n🏦 *PAGO:* ${cuenta.plataforma} (${cuenta.banco})\n🔢 *REF:* ${ref}\n🎁 *REF. CLIENTE:* ${codigoReferidoCliente}`;
 
             await supabaseClient.from('ordenes_vip').insert([{
                 productos: carrito.map(i => i.titulo).join(', '),
                 total: totalGeneral,
                 referencia: ref,
                 estado: "Pendiente",
-                codigo_referido: codigoReferidoCliente
+                codigo_referido: codigoReferidoCliente,
+                coordenadas_gps: `${gpsClienteLat},${gpsClienteLng}`
             }]);
 
             carrito = [];
