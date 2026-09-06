@@ -3,11 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EL CACHAPÓN- Ecosistema Studio 3D & VIP</title>
+    <title>CASA DE LAS PAPAS- Ecosistema Studio 3D & VIP</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Leaflet CSS & JS para Mapas Interactivos -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Plus+Jakarta+Sans:wght@200;300;400;500;700&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; background: radial-gradient(circle at 50% 0%, #1c1917 0%, #0c0a09 100%); background-color: #030202; overflow-x: hidden; }
@@ -42,7 +45,7 @@
                 </div>
                 <div>
                     <h1 class="text-lg font-black tracking-widest text-white font-futurista">
-                       EL<span class="text-amber-400"> CACHAPÓN</span>
+                       CASA DE LAS <span class="text-amber-400">PAPAS</span>
                     </h1>
                     <p class="text-[8px] text-amber-500/70 uppercase tracking-[0.25em] font-bold font-futurista">
                         ECOSISTEMA STUDIO 3D & VIP
@@ -51,11 +54,6 @@
             </div>
 
             <div class="flex items-center gap-3">
-                <!-- Indicador visual si hay referido activo -->
-                <div id="badge-referido" class="hidden bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs px-3 py-1.5 rounded-xl font-futurista items-center gap-2">
-                    <i data-lucide="gift" class="w-4 h-4"></i> Ref: <span id="text-codigo-ref" class="font-mono font-bold"></span>
-                </div>
-
                 <button onclick="cambiarPantalla('simulador3d')" class="hidden sm:flex bg-stone-900 border border-amber-500/30 hover:border-amber-500/60 px-4 py-2 rounded-xl items-center gap-2 text-xs font-futurista uppercase font-bold text-amber-400 cursor-pointer transition-all">
                     <i data-lucide="sparkles" class="w-4 h-4"></i> Simulador 3D🍔
                 </button>
@@ -73,12 +71,11 @@
             <div class="space-y-2">
                 <span class="text-[10px] text-amber-400 font-futurista font-bold uppercase tracking-widest bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">Motor Gráfico WebGL & Catálogo VIP</span>
                 <div class="flex flex-col sm:flex-row items-center justify-center gap-4 text-center">
-    <img src="https://images.seeklogo.com/logo-png/53/2/bdv-banco-de-venezuela-logo-png_seeklogo-534119.png" alt="Logo BCV" class="w-12 h-12 object-contain filter drop-shadow-[0_0_8px_rgba(234,179,8,0.4)]">
-    
-    <h2 class="text-2xl md:text-3xl font-black text-white font-futurista tracking-wider uppercase">
-        ¡ Tus pedidos al instante ! Paga fácil al BCV y listo.
-    </h2>
-</div>
+                    <img src="https://images.seeklogo.com/logo-png/53/2/bdv-banco-de-venezuela-logo-png_seeklogo-534119.png" alt="Logo BCV" class="w-12 h-12 object-contain filter drop-shadow-[0_0_8px_rgba(234,179,8,0.4)]">
+                    <h2 class="text-2xl md:text-3xl font-black text-white font-futurista tracking-wider uppercase">
+                        BIENVENIDOS a la CASA DE LAS PAPAS (Mérida-Venezuela)
+                    </h2>
+                </div>
                 <p class="text-xs text-stone-400 max-w-xl">Arrastra ingredientes en tiempo real o explora nuestras especialidades certificadas.</p>
             </div>
             <button onclick="cambiarPantalla('simulador3d')" class="bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-black font-futurista font-black px-8 py-4 rounded-2xl text-xs uppercase tracking-widest flex items-center gap-3 shadow-xl cursor-pointer shrink-0">
@@ -196,7 +193,7 @@
         </div>
     </main>
 
-    <!-- VISTA 3: CARRITO Y CHECKOUT VIP UNIFICADO -->
+    <!-- VISTA 3: CARRITO Y CHECKOUT VIP UNIFICADO CON MAPA INTERACTIVO -->
     <main id="vista-carrito" class="hidden max-w-7xl w-full mx-auto px-4 py-8 flex-grow relative z-10 grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
         <section class="lg:col-span-3 glass-panel p-6 rounded-3xl space-y-4 shadow-2xl border border-stone-900/60">
             <div class="border-b border-stone-800 pb-3 mb-4 flex justify-between items-end">
@@ -210,6 +207,28 @@
                 Subtotal (<span id="cantidad-items-abajo" class="text-amber-400 font-bold font-mono">0</span> products): 
                 <span class="text-white font-black font-mono ml-1" id="carrito-subtotal-monto-abajo">$0.00</span>
             </div>
+
+            <!-- MODULO DE MAPA INTERACTIVO DE DELIVERY -->
+            <div class="space-y-3 pt-6 border-t border-stone-900">
+                <label class="text-[10px] uppercase text-amber-400 font-bold tracking-widest block font-futurista flex items-center gap-2">
+                    <i data-lucide="map-pin" class="w-4 h-4"></i> Ubicación de Entrega (Mapa GPS en Tiempo Real)
+                </label>
+                <p class="text-xs text-stone-400">Mueve el marcador o haz clic en el mapa para fijar tu ubicación exacta. El costo se calculará según la distancia.</p>
+                
+                <!-- Contenedor del Mapa Leaflet -->
+                <div id="mapa-delivery" class="w-full h-64 rounded-2xl border border-stone-800 relative z-10 bg-stone-950"></div>
+                
+                <div class="grid grid-cols-2 gap-4 text-xs font-mono bg-stone-900 p-4 rounded-xl border border-stone-800">
+                    <div>
+                        <span class="text-stone-400 block text-[9px] uppercase font-futurista">Distancia calculada:</span>
+                        <span id="display-km" class="text-white font-bold text-sm">0.00 km</span>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-stone-400 block text-[9px] uppercase font-futurista">Costo Delivery:</span>
+                        <span id="display-costo-km" class="text-amber-400 font-black text-base">$0.00</span>
+                    </div>
+                </div>
+            </div>
         </section>
 
         <section class="bg-stone-950/90 border border-stone-800 p-6 rounded-3xl shadow-2xl space-y-5">
@@ -220,7 +239,7 @@
                 </div>
             </div>
             <div class="text-base font-normal font-futurista text-stone-300">
-                Total a Pagar: 
+                Total a Pagar (Con Delivery): 
                 <span class="block text-2xl font-black font-mono text-white mt-1" id="carrito-monto-total">$0.00</span>
             </div>
             
@@ -266,537 +285,617 @@
     <footer class="border-t border-stone-950 bg-black/80 p-4 text-center text-[10px] text-stone-600 font-mono tracking-widest mt-12">© 2026 PIZZA PLANETA & D'UNIG LUXURY ECOSISTEMA. TODOS LOS DERECHOS RESERVADOS.</footer>
 
     <script>
-        const SUPABASE_URL = "https://vcymfspywjabnbddbruh.supabase.co"; 
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZjeW1mc3B5d2phYm5iZGRicnVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ2Njg1MjIsImV4cCI6MjEwMDI0NDUyMn0.bXamCrThn-oGgK_6Ol2w3cSoxUd0pJDHW0_UkPqGEuA"; 
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const SUPABASE_URL = "https://xikiwlmxhnrymwmbsyug.supabase.co"; 
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhpa2l3bG14aG5yeW13bWJzeXVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU0NDg3NTMsImV4cCI6MjEwMTAyNDc1M30.1HkgasBvA763iO6u0FnEhOIiCoTkBLJ8O8fL1WpGeDM"; 
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-let carrito = [];
-let capasActuales = []; 
-let catalogoIngredientes3D = [];
-let baseProductos = [], cuentasDB = [];
-let productoSeleccionado = null, filtroInstagram = "luxury_store";
-let fotoSeleccionadaParaLightbox = "";
-const precioBasePan = 1.00; // <-- Ajustado a 1.00
+        let carrito = [];
+        let capasActuales = []; 
+        let catalogoIngredientes3D = [];
+        let baseProductos = [], cuentasDB = [];
+        let productoSeleccionado = null, filtroInstagram = "luxury_store";
+        let fotoSeleccionadaParaLightbox = "";
+        const precioBasePan = 1.00;
 
-let scene, camera, renderer, hamburguesaGrupo;
+        let scene, camera, renderer, hamburguesaGrupo;
 
-function cambiarPantalla(nombre) {
-    ['vitrina', 'detalle', 'simulador3d', 'carrito'].forEach(v => {
-        const el = document.getElementById(`vista-${v}`);
-        if(el) el.classList.add('hidden');
-    });
-    const target = document.getElementById(`vista-${nombre}`);
-    if(target) target.classList.remove('hidden');
+        // Variables de Mapa y Delivery por KM
+        let mapaDelivery = null;
+        let marcadorCliente = null;
+        let costoDeliveryKm = 0;
+        let distanciaCalculadaKm = 0;
+        const LOCAL_LAT = 8.5897;  // Coordenadas base en Mérida / Ejido
+        const LOCAL_LNG = -71.1418;
+        const TARIFA_POR_KM = 0.80; // Costo por kilómetro recorrido
 
-    if (nombre === 'simulador3d') {
-        setTimeout(async () => {
-            if (!scene) inicializarThreeJS();
-            else {
-                const container = document.getElementById('webgl-container');
-                if (renderer && container) {
-                    renderer.setSize(container.clientWidth, container.clientHeight);
-                    camera.aspect = container.clientWidth / container.clientHeight;
-                    camera.updateProjectionMatrix();
+        function cambiarPantalla(nombre) {
+            ['vitrina', 'detalle', 'simulador3d', 'carrito'].forEach(v => {
+                const el = document.getElementById(`vista-${v}`);
+                if(el) el.classList.add('hidden');
+            });
+            const target = document.getElementById(`vista-${nombre}`);
+            if(target) target.classList.remove('hidden');
+
+            if (nombre === 'simulador3d') {
+                setTimeout(async () => {
+                    if (!scene) inicializarThreeJS();
+                    else {
+                        const container = document.getElementById('webgl-container');
+                        if (renderer && container) {
+                            renderer.setSize(container.clientWidth, container.clientHeight);
+                            camera.aspect = container.clientWidth / container.clientHeight;
+                            camera.updateProjectionMatrix();
+                        }
+                    }
+                    await cargarIngredientesDesdeSupabase();
+                    actualizarEscena3D();
+                }, 150);
+            }
+            if (nombre === 'carrito') {
+                renderizarCarrito();
+                cargarCuentasPago();
+                setTimeout(() => {
+                    if (!mapaDelivery) inicializarMapaDelivery();
+                    else mapaDelivery.invalidateSize();
+                }, 200);
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            setTimeout(() => lucide.createIcons(), 50);
+        }
+
+        async function descargarCatalogoDeSupabase() {
+            const grid = document.getElementById('grid-productos-vitrina');
+            if(!grid) return;
+
+            const { data, error } = await supabaseClient.from('productos').select('*');
+            if (error) {
+                grid.innerHTML = `<div class="col-span-3 text-center text-red-400 font-mono text-xs">Error al conectar con la base de datos.</div>`;
+                return;
+            }
+
+            if (data && data.length > 0) {
+                baseProductos = data;
+                grid.innerHTML = "";
+                data.forEach(p => {
+                    const titulo = p.titulo || p.nombre || "Producto sin nombre";
+                    const precio = parseFloat(p.precio || p.valor || 0);
+                    const imagen = p.imagen_url || p.imagen || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600';
+                    const categoria = p.categoria || 'ESPECIALIDAD';
+
+                    grid.innerHTML += `
+                        <div onclick="verDetalleDeProducto(${p.id})" class="glass-panel rounded-3xl overflow-hidden border border-stone-800 flex flex-col justify-between shadow-xl cursor-pointer hover:border-amber-500/40 transition-all group">
+                            <div class="aspect-video bg-stone-950 overflow-hidden relative">
+                                <img src="${imagen}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                <span class="absolute top-3 left-3 bg-black/70 backdrop-blur-md text-[8px] font-futurista font-bold uppercase tracking-widest text-amber-400 px-2.5 py-1 rounded border border-stone-800">${categoria}</span>
+                            </div>
+                            <div class="p-5 space-y-3">
+                                <h3 class="font-futurista font-bold text-xs text-white uppercase truncate">${titulo}</h3>
+                                <div class="flex justify-between items-center pt-2 border-t border-stone-900">
+                                    <span class="font-mono text-xs text-amber-400 font-bold">$${precio.toFixed(2)}</span>
+                                    <span class="text-[10px] font-futurista font-black uppercase text-amber-400 underline">Ver Detalles</span>
+                                </div>
+                            </div>
+                        </div>`;
+                });
+            } else {
+                grid.innerHTML = `<div class="col-span-3 text-center text-stone-500 font-mono text-xs">No se encontraron productos registrados en Supabase.</div>`;
+            }
+            lucide.createIcons();
+        }
+
+        function verDetalleDeProducto(idProducto) {
+            productoSeleccionado = baseProductos.find(p => p.id === idProducto); 
+            if (!productoSeleccionado) return;
+
+            document.getElementById('detalle-titulo').innerText = productoSeleccionado.titulo || productoSeleccionado.nombre;
+            document.getElementById('detalle-categoria').innerText = productoSeleccionado.categoria || 'ESPECIALIDAD';
+            document.getElementById('detalle-precio').innerText = `$${parseFloat(productoSeleccionado.precio || 0).toFixed(2)}`;
+            document.getElementById('detalle-descripcion').innerText = productoSeleccionado.descripcion || "Sin descripción disponible.";
+            document.getElementById('detalle-stock').innerText = `${productoSeleccionado.stock || 10} unidades disponibles`;
+
+            const imgInicial = productoSeleccionado.imagen_url || productoSeleccionado.imagen || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600";
+            actualizarVisorFoto(imgInicial);
+
+            let fotosSlider = [];
+            try { if(productoSeleccionado.imagenes_slider) fotosSlider = JSON.parse(productoSeleccionado.imagenes_slider) || []; } catch(e){}
+            if (fotosSlider.length === 0 && imgInicial) { fotosSlider.push(imgInicial); }
+
+            const containerMiniaturas = document.getElementById('detalle-contenedor-miniaturas'); 
+            containerMiniaturas.innerHTML = "";
+            fotosSlider.forEach((img) => {
+                if(img) {
+                    containerMiniaturas.innerHTML += `<div onclick="actualizarVisorFoto('${img}')" class="aspect-square rounded-xl bg-stone-950 border border-stone-800 overflow-hidden cursor-pointer hover:border-amber-500/40 transition-all"><img src="${img}" class="w-full h-full object-cover"></div>`;
+                }
+            });
+
+            renderizarAdicionales();
+            cambiarPantallaDetalleDirecto();
+        }
+
+        function cambiarPantallaDetalleDirecto() {
+            ['vitrina', 'simulador3d', 'carrito'].forEach(v => {
+                const el = document.getElementById(`vista-${v}`);
+                if(el) el.classList.add('hidden');
+            });
+            document.getElementById('vista-detalle').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            setTimeout(() => lucide.createIcons(), 50);
+        }
+
+        function actualizarVisorFoto(url) {
+            fotoSeleccionadaParaLightbox = url;
+            document.getElementById('detalle-visor-principal').src = url;
+        }
+
+        function amplificarFotoActual() {
+            if(!fotoSeleccionadaParaLightbox) return;
+            const lightbox = document.getElementById('modal-lightbox');
+            const imgCompleta = document.getElementById('lightbox-imagen-completa');
+            imgCompleta.src = fotoSeleccionadaParaLightbox;
+            lightbox.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function cerrarAmplificacion() {
+            document.getElementById('modal-lightbox').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        async function descargarAdicionalesDeSupabase() {
+            const { data, error } = await supabaseClient.from('adicionales').select('*');
+            if (!error && data) {
+                window.listaAdicionales = data;
+            }
+        }
+
+        function renderizarAdicionales() {
+            const contenedor = document.getElementById('contenedor-adicionales');
+            if (!contenedor || !window.listaAdicionales || window.listaAdicionales.length === 0) {
+                if(contenedor) contenedor.innerHTML = "";
+                return;
+            }
+
+            contenedor.innerHTML = `
+                <details class="group bg-stone-900 border border-stone-800 rounded-xl overflow-hidden my-4">
+                    <summary class="list-none p-4 text-[10px] font-bold text-stone-400 cursor-pointer flex justify-between items-center hover:text-amber-400">
+                        <span>SELECCIONAR ADICIONALES / EXTRAS</span>
+                        <i data-lucide="chevron-down" class="w-4 h-4 group-open:rotate-180 transition-transform"></i>
+                    </summary>
+                    <div class="p-3 border-t border-stone-800 space-y-2">
+                        ${window.listaAdicionales.map(ad => `
+                            <label class="flex items-center gap-3 cursor-pointer p-2 hover:bg-stone-800 rounded-lg">
+                                <input type="checkbox" class="check-adicional w-4 h-4 accent-amber-500" data-nombre="${ad.nombre}" data-precio="${ad.precio}">
+                                <span class="text-xs text-white font-medium">${ad.nombre}</span>
+                                <span class="text-xs text-amber-400 font-mono ml-auto">+$${parseFloat(ad.precio).toFixed(2)}</span>
+                            </label>
+                        `).join('')}
+                    </div>
+                </details>`;
+            lucide.createIcons();
+        }
+
+        function agregarDetalleAlCarritoYVolver() {
+            if (!productoSeleccionado) return;
+
+            const checkboxes = document.querySelectorAll('.check-adicional:checked');
+            let adicionalesSeleccionados = [];
+            let extraTotal = 0;
+
+            checkboxes.forEach(cb => {
+                adicionalesSeleccionados.push(cb.getAttribute('data-nombre'));
+                extraTotal += parseFloat(cb.getAttribute('data-precio') || 0);
+            });
+
+            const tituloBase = productoSeleccionado.titulo || productoSeleccionado.nombre;
+            const tituloFinal = `${tituloBase} ${adicionalesSeleccionados.length > 0 ? '(+ ' + adicionalesSeleccionados.join(', ') + ')' : ''}`;
+            const precioFinal = parseFloat(productoSeleccionado.precio || 0) + extraTotal;
+            const imagenFinal = productoSeleccionado.imagen_url || productoSeleccionado.imagen || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=600';
+
+            carrito.push({ titulo: tituloFinal, precio: precioFinal, imagen_url: imagenFinal });
+            document.getElementById('contador-carrito-badge').innerText = carrito.length;
+            
+            alert(`¡"${tituloFinal}" agregado al carrito con éxito!`);
+            cambiarPantalla('vitrina');
+        }
+
+        async function cargarIngredientesDesdeSupabase() {
+            try {
+                const { data, error } = await supabaseClient.from('ingredientes_3d').select('*');
+                if (error || !data || data.length === 0) {
+                    catalogoIngredientes3D = [];
+                } else {
+                    catalogoIngredientes3D = data.map(item => ({
+                        id: item.id,
+                        nombre: item.nombre || item.titulo,
+                        precio: parseFloat(item.precio || item.valor || 0),
+                        color: item.color || '#c47622',
+                        tipo: item.tipo || 'cilindro',
+                        imagen_url: item.imagen_url || item.imagen || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=300'
+                    }));
+                    renderizarBandejaIngredientes();
+                }
+            } catch (err) {
+                console.error("Error cargando ingredientes:", err);
+            }
+        }
+
+        function inicializarThreeJS() {
+            const container = document.getElementById('webgl-container');
+            if(!container) return;
+            container.innerHTML = ""; 
+
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 1000);
+            camera.position.set(0, 5, 12);
+            camera.lookAt(0, 0, 0);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            container.appendChild(renderer.domElement);
+
+            scene.add(new THREE.AmbientLight(0xffffff, 1.2));
+            const dirLight = new THREE.DirectionalLight(0xfffaed, 2.0);
+            dirLight.position.set(5, 10, 7);
+            scene.add(dirLight);
+
+            hamburguesaGrupo = new THREE.Group();
+            scene.add(hamburguesaGrupo);
+
+            let isDragging = false;
+            let previousMousePosition = { x: 0, y: 0 };
+
+            container.addEventListener('mousedown', (e) => { isDragging = true; previousMousePosition = { x: e.clientX, y: e.clientY }; });
+            container.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                const deltaX = e.clientX - previousMousePosition.x;
+                hamburguesaGrupo.rotation.y += deltaX * 0.01;
+                previousMousePosition = { x: e.clientX, y: e.clientY };
+            });
+            window.addEventListener('mouseup', () => { isDragging = false; });
+
+            animarThreeJS();
+        }
+
+        function animarThreeJS() {
+            requestAnimationFrame(animarThreeJS);
+            if(renderer && scene && camera) {
+                renderer.render(scene, camera);
+            }
+        }
+
+        function renderizarBandejaIngredientes() {
+            const contenedor = document.getElementById('bandeja-ingredientes-arrastrables');
+            if(!contenedor) return;
+            contenedor.innerHTML = "";
+            
+            catalogoIngredientes3D.forEach(ing => {
+                contenedor.innerHTML += `
+                    <div draggable="true" ondragstart="event.dataTransfer.setData('text/plain', '${ing.id}')" onclick="agregarCapa('${ing.id}')" class="draggable-item glass-panel border border-stone-800 hover:border-amber-500/60 p-3 rounded-2xl flex flex-col justify-between items-center text-center cursor-pointer shadow-lg group">
+                        <div class="w-full h-16 rounded-xl overflow-hidden mb-2 relative bg-stone-900">
+                            <img src="${ing.imagen_url}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300">
+                        </div>
+                        <span class="text-xs text-white font-bold block">${ing.nombre}</span>
+                        <span class="text-[10px] text-amber-400 font-mono mt-0.5">+$${ing.precio.toFixed(2)}</span>
+                    </div>`;
+            });
+
+            const zonaDrop = document.getElementById('zona-drop-canvas');
+            if(zonaDrop) {
+                zonaDrop.ondragover = (e) => e.preventDefault();
+                zonaDrop.ondrop = (e) => {
+                    e.preventDefault();
+                    const idIngrediente = e.dataTransfer.getData('text/plain');
+                    if(idIngrediente) agregarCapa(idIngrediente);
+                };
+            }
+        }
+
+        function agregarCapa(id) {
+            const ing = catalogoIngredientes3D.find(i => i.id == id);
+            if(ing) {
+                capasActuales.push({ ...ing, uuid: Math.random().toString(36).substring(2, 9) });
+                actualizarEscena3D();
+                renderizarListaCapasActivas();
+            }
+        }
+
+        function eliminarCapaPorUuid(uuid) {
+            capasActuales = capasActuales.filter(c => c.uuid !== uuid);
+            actualizarEscena3D();
+            renderizarListaCapasActivas();
+        }
+
+        function limpiarTodasLasCapas() {
+            capasActuales = [];
+            actualizarEscena3D();
+            renderizarListaCapasActivas();
+        }
+
+        function renderizarListaCapasActivas() {
+            const contenedor = document.getElementById('lista-capas-activas-pila');
+            if(!contenedor) return;
+            contenedor.innerHTML = "";
+
+            if(capasActuales.length === 0) {
+                contenedor.innerHTML = `<div class="text-xs text-stone-500 text-center py-4 font-mono">Sin ingredientes agregados aún.</div>`;
+                document.getElementById('precio-total-3d').innerText = `$${precioBasePan.toFixed(2)}`;
+                window.precioFinal3D = precioBasePan;
+                return;
+            }
+
+            let total = precioBasePan;
+            capasActuales.forEach((capa, index) => {
+                total += capa.precio;
+                contenedor.innerHTML += `
+                    <div class="flex justify-between items-center bg-stone-900/90 border border-stone-800 px-3 py-2 rounded-xl text-xs">
+                        <div class="flex items-center gap-2">
+                            <span class="font-mono text-[10px] text-amber-400 font-bold">#${index + 1}</span>
+                            <span class="text-stone-200 font-bold">${capa.nombre}</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="font-mono text-amber-400">+$${capa.precio.toFixed(2)}</span>
+                            <button onclick="eliminarCapaPorUuid('${capa.uuid}')" class="w-5 h-5 bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white rounded-md flex items-center justify-center transition-colors font-bold text-[10px] cursor-pointer">✕</button>
+                        </div>
+                    </div>`;
+            });
+
+            document.getElementById('precio-total-3d').innerText = `$${total.toFixed(2)}`;
+            window.precioFinal3D = total;
+        }
+
+        function crearPanBeigeOscuroConPuntitos(esSuperior = false) {
+            const grupoPan = new THREE.Group();
+            const materialPan = new THREE.MeshStandardMaterial({ color: 0x8c6747, roughness: 0.55 });
+            
+            if (!esSuperior) {
+                const geoBase = new THREE.CylinderGeometry(2.3, 2.45, 0.6, 32);
+                grupoPan.add(new THREE.Mesh(geoBase, materialPan));
+            } else {
+                const geoSup = new THREE.SphereGeometry(2.3, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+                const meshSup = new THREE.Mesh(geoSup, materialPan);
+                meshSup.scale.set(1, 0.75, 1);
+                grupoPan.add(meshSup);
+
+                const materialPuntito = new THREE.MeshStandardMaterial({ color: 0x3d2715 });
+                const totalPuntitos = 28;
+                for(let i = 0; i < totalPuntitos; i++) {
+                    const geoPunto = new THREE.SphereGeometry(0.05, 8, 8);
+                    const meshPunto = new THREE.Mesh(geoPunto, materialPuntito);
+                    const phi = Math.acos(-1 + (2 * i) / totalPuntitos) * 0.5;
+                    const theta = Math.sqrt(totalPuntitos * Math.PI) * phi;
+                    const radioDist = 1.6 * Math.sin(phi);
+                    meshPunto.position.set(radioDist * Math.cos(theta), 1.1 + (Math.cos(phi) * 0.4), radioDist * Math.sin(theta));
+                    grupoPan.add(meshPunto);
                 }
             }
-            await cargarIngredientesDesdeSupabase();
-            actualizarEscena3D();
-        }, 150);
-    }
-    if (nombre === 'carrito') {
-        renderizarCarrito();
-        cargarCuentasPago();
-    }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    setTimeout(() => lucide.createIcons(), 50);
-}
+            return grupoPan;
+        }
 
-async function descargarCatalogoDeSupabase() {
-    const grid = document.getElementById('grid-productos-vitrina');
-    if(!grid) return;
+        function actualizarEscena3D() {
+            if(!hamburguesaGrupo) return;
+            while(hamburguesaGrupo.children.length > 0){ hamburguesaGrupo.remove(hamburguesaGrupo.children[0]); }
 
-    const { data, error } = await supabaseClient.from('productos').select('*');
-    if (error) {
-        grid.innerHTML = `<div class="col-span-3 text-center text-red-400 font-mono text-xs">Error al conectar con la base de datos.</div>`;
-        return;
-    }
+            let alturaActualY = -2.2;
+            const panBaseMesh = crearPanBeigeOscuroConPuntitos(false);
+            panBaseMesh.position.y = alturaActualY;
+            hamburguesaGrupo.add(panBaseMesh);
+            alturaActualY += 0.5;
 
-    if (data && data.length > 0) {
-        baseProductos = data;
-        grid.innerHTML = "";
-        data.forEach(p => {
-            const titulo = p.titulo || p.nombre || "Producto sin nombre";
-            const precio = parseFloat(p.precio || p.valor || 0);
-            const imagen = p.imagen_url || p.imagen || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600';
-            const categoria = p.categoria || 'ESPECIALIDAD';
+            capasActuales.forEach((capa) => {
+                let meshCapa;
+                let colorHex = parseInt((capa.color || '#c47622').replace('#', '0x'));
+                const matCapa = new THREE.MeshStandardMaterial({ color: colorHex, roughness: 0.4 });
 
-            grid.innerHTML += `
-                <div onclick="verDetalleDeProducto(${p.id})" class="glass-panel rounded-3xl overflow-hidden border border-stone-800 flex flex-col justify-between shadow-xl cursor-pointer hover:border-amber-500/40 transition-all group">
-                    <div class="aspect-video bg-stone-950 overflow-hidden relative">
-                        <img src="${imagen}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-                        <span class="absolute top-3 left-3 bg-black/70 backdrop-blur-md text-[8px] font-futurista font-bold uppercase tracking-widest text-amber-400 px-2.5 py-1 rounded border border-stone-800">${categoria}</span>
-                    </div>
-                    <div class="p-5 space-y-3">
-                        <h3 class="font-futurista font-bold text-xs text-white uppercase truncate">${titulo}</h3>
-                        <div class="flex justify-between items-center pt-2 border-t border-stone-900">
-                            <span class="font-mono text-xs text-amber-400 font-bold">$${precio.toFixed(2)}</span>
-                            <span class="text-[10px] font-futurista font-black uppercase text-amber-400 underline">Ver Detalles</span>
+                if (capa.tipo === 'cilindro') {
+                    meshCapa = new THREE.Mesh(new THREE.CylinderGeometry(2.35, 2.35, 0.45, 32), matCapa);
+                    alturaActualY += 0.35;
+                } else if (capa.tipo === 'slab') {
+                    meshCapa = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.15, 3.6), matCapa);
+                    alturaActualY += 0.2;
+                } else if (capa.tipo === 'huevo_frito') {
+                    const grupoHuevo = new THREE.Group();
+                    grupoHuevo.add(new THREE.Mesh(new THREE.CylinderGeometry(2.4, 2.4, 0.12, 32), new THREE.MeshStandardMaterial({ color: 0xffffff })));
+                    const meshYema = new THREE.Mesh(new THREE.SphereGeometry(0.9, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0xffaa00 }));
+                    meshYema.scale.set(1, 0.5, 1);
+                    meshYema.position.set(0.4, 0.06, -0.3);
+                    grupoHuevo.add(meshYema);
+                    meshCapa = grupoHuevo;
+                    alturaActualY += 0.2;
+                } else {
+                    meshCapa = new THREE.Mesh(new THREE.CylinderGeometry(2.35, 2.35, 0.2, 32), matCapa);
+                    alturaActualY += 0.2;
+                }
+
+                meshCapa.position.y = alturaActualY;
+                hamburguesaGrupo.add(meshCapa);
+                alturaActualY += 0.2;
+            });
+
+            const panSupMesh = crearPanBeigeOscuroConPuntitos(true);
+            panSupMesh.position.y = alturaActualY + 0.1;
+            hamburguesaGrupo.add(panSupMesh);
+        }
+
+        function enviarCreacion3DAlCarrito() {
+            if (capasActuales.length === 0) {
+                alert("Arma tu hamburguesa 3D agregando al menos un ingrediente.");
+                return;
+            }
+            const nombres = capasActuales.map(i => i.nombre).join(', ');
+            
+            carrito.push({
+                titulo: `🍔 Burger 3D Real (${nombres})`,
+                precio: window.precioFinal3D || 1.00,
+                imagen_url: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=600",
+                idsIngredientes: capasActuales.map(c => c.id)
+            });
+            
+            document.getElementById('contador-carrito-badge').innerText = carrito.length;
+            alert("¡Hamburguesa 3D agregada con éxito al carrito!");
+            capasActuales = [];
+            cambiarPantalla('vitrina');
+        }
+
+        // ==========================================
+        // MÓDULO DE MAPA LEAFLET Y CÁLCULO POR KM
+        // ==========================================
+        function inicializarMapaDelivery() {
+            const contenedorMapa = document.getElementById('mapa-delivery');
+            if (!contenedorMapa || mapaDelivery) return;
+
+            mapaDelivery = L.map('mapa-delivery').setView([LOCAL_LAT, LOCAL_LNG], 14);
+
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                maxZoom: 19,
+                attribution: '&copy; OpenStreetMap contributors & CartoDB'
+            }).addTo(mapaDelivery);
+
+            // Icono del Local
+            const iconoLocal = L.divIcon({
+                className: 'custom-local-icon',
+                html: '<div style="background:#f59e0b; width:16px; height:16px; border-radius:50%; border:2px solid #000; box-shadow: 0 0 10px #f59e0b;"></div>',
+                iconSize: [16, 16]
+            });
+            L.marker([LOCAL_LAT, LOCAL_LNG], { icon: iconoLocal }).addTo(mapaDelivery).bindPopup("<b>CASA DE LAS PAPAS</b><br>Punto de Salida");
+
+            // Marcador del Cliente
+            marcadorCliente = L.marker([LOCAL_LAT, LOCAL_LNG], { draggable: true }).addTo(mapaDelivery);
+
+            marcadorCliente.on('dragend', function (e) {
+                const pos = marcadorCliente.getLatLng();
+                calcularDistanciaYPrecio(pos.lat, pos.lng);
+            });
+
+            mapaDelivery.on('click', function (e) {
+                marcadorCliente.setLatLng(e.latlng);
+                calcularDistanciaYPrecio(e.latlng.lat, e.latlng.lng);
+            });
+
+            calcularDistanciaYPrecio(LOCAL_LAT, LOCAL_LNG);
+        }
+
+        function calcularDistanciaEnKm(lat1, lon1, lat2, lon2) {
+            const R = 6371; 
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = 
+                Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c; 
+        }
+
+        function calcularDistanciaYPrecio(latCliente, lonCliente) {
+            distanciaCalculadaKm = calcularDistanciaEnKm(LOCAL_LAT, LOCAL_LNG, latCliente, lonCliente);
+            
+            let costoCalculado = distanciaCalculadaKm * TARIFA_POR_KM;
+            if (costoCalculado < 1.00 && distanciaCalculadaKm > 0.1) costoCalculado = 1.00; 
+            if (distanciaCalculadaKm <= 0.1) costoCalculado = 0.00;
+
+            costoDeliveryKm = parseFloat(costoCalculado.toFixed(2));
+
+            document.getElementById('display-km').innerText = `${distanciaCalculadaKm.toFixed(2)} km`;
+            document.getElementById('display-costo-km').innerText = `$${costoDeliveryKm.toFixed(2)}`;
+
+            renderizarCarrito();
+        }
+
+        function renderizarCarrito() {
+            const cont = document.getElementById('lista-items-carrito');
+            const contAbajo = document.getElementById('cantidad-items-abajo');
+            if(!cont) return;
+            cont.innerHTML = "";
+            let subtotalProductos = 0;
+            if(contAbajo) contAbajo.innerText = carrito.length;
+
+            if(carrito.length === 0) {
+                cont.innerHTML = `<div class="p-8 text-center text-stone-500 font-mono text-xs">Tu bolsa está vacía.</div>`;
+                document.getElementById('carrito-monto-total').innerText = "$0.00";
+                if(document.getElementById('carrito-subtotal-monto-abajo')) document.getElementById('carrito-subtotal-monto-abajo').innerText = "$0.00";
+                costoDeliveryKm = 0;
+                document.getElementById('display-costo-km').innerText = "$0.00";
+                document.getElementById('display-km').innerText = "0.00 km";
+                return;
+            }
+
+            carrito.forEach((item, idx) => {
+                subtotalProductos += item.precio;
+                cont.innerHTML += `
+                    <div class="flex justify-between items-center py-4 first:pt-2 last:pb-2">
+                        <div class="flex items-center gap-3">
+                            <img src="${item.imagen_url}" class="w-12 h-12 object-cover rounded-xl border border-stone-800">
+                            <div>
+                                <h4 class="text-xs font-bold text-white font-futurista uppercase">${item.titulo}</h4>
+                                <button onclick="carrito.splice(${idx},1);renderizarCarrito();document.getElementById('contador-carrito-badge').innerText=carrito.length;" class="text-[10px] text-red-400 hover:underline cursor-pointer">Eliminar</button>
+                            </div>
                         </div>
-                    </div>
-                </div>`;
+                        <span class="font-mono text-amber-400 font-bold">$${item.precio.toFixed(2)}</span>
+                    </div>`;
+            });
+
+            // Sumar subtotal de productos + costo de delivery calculado por KM
+            let totalGeneral = subtotalProductos + costoDeliveryKm;
+            document.getElementById('carrito-monto-total').innerText = `$${totalGeneral.toFixed(2)}`;
+            if(document.getElementById('carrito-subtotal-monto-abajo')) {
+                document.getElementById('carrito-subtotal-monto-abajo').innerText = `$${subtotalProductos.toFixed(2)}`;
+            }
+        }
+
+        async function cargarCuentasPago() {
+            const sel = document.getElementById('select-metodo-pago');
+            if(!sel) return;
+            const { data } = await supabaseClient.from('cuentas_pago').select('*');
+            if(data) {
+                cuentasDB = data;
+                sel.innerHTML = "<option value=''>-- Seleccionar Método --</option>";
+                data.forEach((c, i) => {
+                    const plataformaStr = c.plataforma ? c.plataforma.toUpperCase() : 'MÉTODO';
+                    const bancoStr = c.banco ? ` - ${c.banco}` : '';
+                    sel.innerHTML += `<option value="${i}">[${plataformaStr}]${bancoStr}</option>`;
+                });
+            }
+        }
+
+        function mostrarDetallesBanco() {
+            const idx = document.getElementById('select-metodo-pago').value;
+            const caja = document.getElementById('caja-banco-detalle');
+            if(!caja) return;
+            if(idx === "" || !cuentasDB[idx]) { caja.classList.add('hidden'); return; }
+            const c = cuentasDB[idx];
+            caja.classList.remove('hidden');
+            caja.innerHTML = `
+                <div><b>Banco:</b> ${c.banco || 'N/A'}</div>
+                <div><b>Titular:</b> ${c.titular || 'N/A'}</div>
+                <div><b>CI/RIF:</b> ${c.ci || 'N/A'}</div>
+                <div><b>Teléfono:</b> ${c.telefono || 'N/A'}</div>
+                ${c.detalles ? `<div class="italic text-stone-400 mt-1">${c.detalles}</div>` : ''}
+            `;
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const codigoReferido = urlParams.get('ref');
+
+            if (codigoReferido) {
+                localStorage.setItem('dunig_ref_code', codigoReferido);
+            }
+
+            const refGuardado = localStorage.getItem('dunig_ref_code');
+            if (refGuardado) {
+                const displayRef = document.getElementById('display-codigo-referido');
+                const contenedorRef = document.getElementById('contenedor-ref-info');
+                if(displayRef) displayRef.innerText = refGuardado;
+                if(contenedorRef) contenedorRef.classList.remove('hidden');
+            }
+
+            descargarCatalogoDeSupabase();
+            descargarAdicionalesDeSupabase();
+            lucide.createIcons();
         });
-    } else {
-        grid.innerHTML = `<div class="col-span-3 text-center text-stone-500 font-mono text-xs">No se encontraron productos registrados en Supabase.</div>`;
-    }
-    lucide.createIcons();
-}
 
-function verDetalleDeProducto(idProducto) {
-    productoSeleccionado = baseProductos.find(p => p.id === idProducto); 
-    if (!productoSeleccionado) return;
-
-    document.getElementById('detalle-titulo').innerText = productoSeleccionado.titulo || productoSeleccionado.nombre;
-    document.getElementById('detalle-categoria').innerText = productoSeleccionado.categoria || 'ESPECIALIDAD';
-    document.getElementById('detalle-precio').innerText = `$${parseFloat(productoSeleccionado.precio || 0).toFixed(2)}`;
-    document.getElementById('detalle-descripcion').innerText = productoSeleccionado.descripcion || "Sin descripción disponible.";
-    document.getElementById('detalle-stock').innerText = `${productoSeleccionado.stock || 10} unidades disponibles`;
-
-    const imgInicial = productoSeleccionado.imagen_url || productoSeleccionado.imagen || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600";
-    actualizarVisorFoto(imgInicial);
-
-    let fotosSlider = [];
-    try { if(productoSeleccionado.imagenes_slider) fotosSlider = JSON.parse(productoSeleccionado.imagenes_slider) || []; } catch(e){}
-    if (fotosSlider.length === 0 && imgInicial) { fotosSlider.push(imgInicial); }
-
-    const containerMiniaturas = document.getElementById('detalle-contenedor-miniaturas'); 
-    containerMiniaturas.innerHTML = "";
-    fotosSlider.forEach((img) => {
-        if(img) {
-            containerMiniaturas.innerHTML += `<div onclick="actualizarVisorFoto('${img}')" class="aspect-square rounded-xl bg-stone-950 border border-stone-800 overflow-hidden cursor-pointer hover:border-amber-500/40 transition-all"><img src="${img}" class="w-full h-full object-cover"></div>`;
-        }
-    });
-
-    renderizarAdicionales();
-    cambiarPantallaDetalleDirecto();
-}
-
-function cambiarPantallaDetalleDirecto() {
-    ['vitrina', 'simulador3d', 'carrito'].forEach(v => {
-        const el = document.getElementById(`vista-${v}`);
-        if(el) el.classList.add('hidden');
-    });
-    document.getElementById('vista-detalle').classList.remove('hidden');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    setTimeout(() => lucide.createIcons(), 50);
-}
-
-function actualizarVisorFoto(url) {
-    fotoSeleccionadaParaLightbox = url;
-    document.getElementById('detalle-visor-principal').src = url;
-}
-
-function amplificarFotoActual() {
-    if(!fotoSeleccionadaParaLightbox) return;
-    const lightbox = document.getElementById('modal-lightbox');
-    const imgCompleta = document.getElementById('lightbox-imagen-completa');
-    imgCompleta.src = fotoSeleccionadaParaLightbox;
-    lightbox.classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
-}
-
-function cerrarAmplificacion() {
-    document.getElementById('modal-lightbox').classList.add('hidden');
-    document.body.style.overflow = 'auto';
-}
-
-async function descargarAdicionalesDeSupabase() {
-    const { data, error } = await supabaseClient.from('adicionales').select('*');
-    if (!error && data) {
-        window.listaAdicionales = data;
-    }
-}
-
-function renderizarAdicionales() {
-    const contenedor = document.getElementById('contenedor-adicionales');
-    if (!contenedor || !window.listaAdicionales || window.listaAdicionales.length === 0) {
-        if(contenedor) contenedor.innerHTML = "";
-        return;
-    }
-
-    contenedor.innerHTML = `
-        <details class="group bg-stone-900 border border-stone-800 rounded-xl overflow-hidden my-4">
-            <summary class="list-none p-4 text-[10px] font-bold text-stone-400 cursor-pointer flex justify-between items-center hover:text-amber-400">
-                <span>SELECCIONAR ADICIONALES / EXTRAS</span>
-                <i data-lucide="chevron-down" class="w-4 h-4 group-open:rotate-180 transition-transform"></i>
-            </summary>
-            <div class="p-3 border-t border-stone-800 space-y-2">
-                ${window.listaAdicionales.map(ad => `
-                    <label class="flex items-center gap-3 cursor-pointer p-2 hover:bg-stone-800 rounded-lg">
-                        <input type="checkbox" class="check-adicional w-4 h-4 accent-amber-500" data-nombre="${ad.nombre}" data-precio="${ad.precio}">
-                        <span class="text-xs text-white font-medium">${ad.nombre}</span>
-                        <span class="text-xs text-amber-400 font-mono ml-auto">+$${parseFloat(ad.precio).toFixed(2)}</span>
-                    </label>
-                `).join('')}
-            </div>
-        </details>`;
-    lucide.createIcons();
-}
-
-function agregarDetalleAlCarritoYVolver() {
-    if (!productoSeleccionado) return;
-
-    const checkboxes = document.querySelectorAll('.check-adicional:checked');
-    let adicionalesSeleccionados = [];
-    let extraTotal = 0;
-
-    checkboxes.forEach(cb => {
-        adicionalesSeleccionados.push(cb.getAttribute('data-nombre'));
-        extraTotal += parseFloat(cb.getAttribute('data-precio') || 0);
-    });
-
-    const tituloBase = productoSeleccionado.titulo || productoSeleccionado.nombre;
-    const tituloFinal = `${tituloBase} ${adicionalesSeleccionados.length > 0 ? '(+ ' + adicionalesSeleccionados.join(', ') + ')' : ''}`;
-    const precioFinal = parseFloat(productoSeleccionado.precio || 0) + extraTotal;
-    const imagenFinal = productoSeleccionado.imagen_url || productoSeleccionado.imagen || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=600';
-
-    carrito.push({ titulo: tituloFinal, precio: precioFinal, imagen_url: imagenFinal });
-    document.getElementById('contador-carrito-badge').innerText = carrito.length;
-    
-    alert(`¡"${tituloFinal}" agregado al carrito con éxito!`);
-    cambiarPantalla('vitrina');
-}
-
-async function cargarIngredientesDesdeSupabase() {
-    try {
-        const { data, error } = await supabaseClient.from('ingredientes_3d').select('*');
-        if (error || !data || data.length === 0) {
-            catalogoIngredientes3D = [];
-        } else {
-            catalogoIngredientes3D = data.map(item => ({
-                id: item.id, // UUID real de Supabase
-                nombre: item.nombre || item.titulo,
-                precio: parseFloat(item.precio || item.valor || 0),
-                color: item.color || '#c47622',
-                tipo: item.tipo || 'cilindro',
-                imagen_url: item.imagen_url || item.imagen || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=300'
-            }));
-            renderizarBandejaIngredientes();
-        }
-    } catch (err) {
-        console.error("Error cargando ingredientes:", err);
-    }
-}
-
-function inicializarThreeJS() {
-    const container = document.getElementById('webgl-container');
-    if(!container) return;
-    container.innerHTML = ""; 
-
-    scene = new THREE.Scene();
-    camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 1000);
-    camera.position.set(0, 5, 12);
-    camera.lookAt(0, 0, 0);
-
-    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(container.clientWidth, container.clientHeight);
-    renderer.setPixelRatio(window.devicePixelRatio);
-    container.appendChild(renderer.domElement);
-
-    scene.add(new THREE.AmbientLight(0xffffff, 1.2));
-    const dirLight = new THREE.DirectionalLight(0xfffaed, 2.0);
-    dirLight.position.set(5, 10, 7);
-    scene.add(dirLight);
-
-    hamburguesaGrupo = new THREE.Group();
-    scene.add(hamburguesaGrupo);
-
-    let isDragging = false;
-    let previousMousePosition = { x: 0, y: 0 };
-
-    container.addEventListener('mousedown', (e) => { isDragging = true; previousMousePosition = { x: e.clientX, y: e.clientY }; });
-    container.addEventListener('mousemove', (e) => {
-        if (!isDragging) return;
-        const deltaX = e.clientX - previousMousePosition.x;
-        hamburguesaGrupo.rotation.y += deltaX * 0.01;
-        previousMousePosition = { x: e.clientX, y: e.clientY };
-    });
-    window.addEventListener('mouseup', () => { isDragging = false; });
-
-    animarThreeJS();
-}
-
-function animarThreeJS() {
-    requestAnimationFrame(animarThreeJS);
-    if(renderer && scene && camera) {
-        renderer.render(scene, camera);
-    }
-}
-
-function renderizarBandejaIngredientes() {
-    const contenedor = document.getElementById('bandeja-ingredientes-arrastrables');
-    if(!contenedor) return;
-    contenedor.innerHTML = "";
-    
-    catalogoIngredientes3D.forEach(ing => {
-        contenedor.innerHTML += `
-            <div draggable="true" ondragstart="event.dataTransfer.setData('text/plain', '${ing.id}')" onclick="agregarCapa('${ing.id}')" class="draggable-item glass-panel border border-stone-800 hover:border-amber-500/60 p-3 rounded-2xl flex flex-col justify-between items-center text-center cursor-pointer shadow-lg group">
-                <div class="w-full h-16 rounded-xl overflow-hidden mb-2 relative bg-stone-900">
-                    <img src="${ing.imagen_url}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300">
-                </div>
-                <span class="text-xs text-white font-bold block">${ing.nombre}</span>
-                <span class="text-[10px] text-amber-400 font-mono mt-0.5">+$${ing.precio.toFixed(2)}</span>
-            </div>`;
-    });
-
-    const zonaDrop = document.getElementById('zona-drop-canvas');
-    if(zonaDrop) {
-        zonaDrop.ondragover = (e) => e.preventDefault();
-        zonaDrop.ondrop = (e) => {
-            e.preventDefault();
-            const idIngrediente = e.dataTransfer.getData('text/plain');
-            if(idIngrediente) agregarCapa(idIngrediente);
-        };
-    }
-}
-
-function agregarCapa(id) {
-    const ing = catalogoIngredientes3D.find(i => i.id == id);
-    if(ing) {
-        capasActuales.push({ ...ing, uuid: Math.random().toString(36).substring(2, 9) });
-        actualizarEscena3D();
-        renderizarListaCapasActivas();
-    }
-}
-
-function eliminarCapaPorUuid(uuid) {
-    capasActuales = capasActuales.filter(c => c.uuid !== uuid);
-    actualizarEscena3D();
-    renderizarListaCapasActivas();
-}
-
-function limpiarTodasLasCapas() {
-    capasActuales = [];
-    actualizarEscena3D();
-    renderizarListaCapasActivas();
-}
-
-function renderizarListaCapasActivas() {
-    const contenedor = document.getElementById('lista-capas-activas-pila');
-    if(!contenedor) return;
-    contenedor.innerHTML = "";
-
-    if(capasActuales.length === 0) {
-        contenedor.innerHTML = `<div class="text-xs text-stone-500 text-center py-4 font-mono">Sin ingredientes agregados aún.</div>`;
-        document.getElementById('precio-total-3d').innerText = `$${precioBasePan.toFixed(2)}`;
-        window.precioFinal3D = precioBasePan;
-        return;
-    }
-
-    let total = precioBasePan;
-    capasActuales.forEach((capa, index) => {
-        total += capa.precio;
-        contenedor.innerHTML += `
-            <div class="flex justify-between items-center bg-stone-900/90 border border-stone-800 px-3 py-2 rounded-xl text-xs">
-                <div class="flex items-center gap-2">
-                    <span class="font-mono text-[10px] text-amber-400 font-bold">#${index + 1}</span>
-                    <span class="text-stone-200 font-bold">${capa.nombre}</span>
-                </div>
-                <div class="flex items-center gap-3">
-                    <span class="font-mono text-amber-400">+$${capa.precio.toFixed(2)}</span>
-                    <button onclick="eliminarCapaPorUuid('${capa.uuid}')" class="w-5 h-5 bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white rounded-md flex items-center justify-center transition-colors font-bold text-[10px] cursor-pointer">✕</button>
-                </div>
-            </div>`;
-    });
-
-    document.getElementById('precio-total-3d').innerText = `$${total.toFixed(2)}`;
-    window.precioFinal3D = total;
-}
-
-function crearPanBeigeOscuroConPuntitos(esSuperior = false) {
-    const grupoPan = new THREE.Group();
-    const materialPan = new THREE.MeshStandardMaterial({ color: 0x8c6747, roughness: 0.55 });
-    
-    if (!esSuperior) {
-        const geoBase = new THREE.CylinderGeometry(2.3, 2.45, 0.6, 32);
-        grupoPan.add(new THREE.Mesh(geoBase, materialPan));
-    } else {
-        const geoSup = new THREE.SphereGeometry(2.3, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2);
-        const meshSup = new THREE.Mesh(geoSup, materialPan);
-        meshSup.scale.set(1, 0.75, 1);
-        grupoPan.add(meshSup);
-
-        const materialPuntito = new THREE.MeshStandardMaterial({ color: 0x3d2715 });
-        const totalPuntitos = 28;
-        for(let i = 0; i < totalPuntitos; i++) {
-            const geoPunto = new THREE.SphereGeometry(0.05, 8, 8);
-            const meshPunto = new THREE.Mesh(geoPunto, materialPuntito);
-            const phi = Math.acos(-1 + (2 * i) / totalPuntitos) * 0.5;
-            const theta = Math.sqrt(totalPuntitos * Math.PI) * phi;
-            const radioDist = 1.6 * Math.sin(phi);
-            meshPunto.position.set(radioDist * Math.cos(theta), 1.1 + (Math.cos(phi) * 0.4), radioDist * Math.sin(theta));
-            grupoPan.add(meshPunto);
-        }
-    }
-    return grupoPan;
-}
-
-function actualizarEscena3D() {
-    if(!hamburguesaGrupo) return;
-    while(hamburguesaGrupo.children.length > 0){ hamburguesaGrupo.remove(hamburguesaGrupo.children[0]); }
-
-    let alturaActualY = -2.2;
-    const panBaseMesh = crearPanBeigeOscuroConPuntitos(false);
-    panBaseMesh.position.y = alturaActualY;
-    hamburguesaGrupo.add(panBaseMesh);
-    alturaActualY += 0.5;
-
-    capasActuales.forEach((capa) => {
-        let meshCapa;
-        let colorHex = parseInt((capa.color || '#c47622').replace('#', '0x'));
-        const matCapa = new THREE.MeshStandardMaterial({ color: colorHex, roughness: 0.4 });
-
-        if (capa.tipo === 'cilindro') {
-            meshCapa = new THREE.Mesh(new THREE.CylinderGeometry(2.35, 2.35, 0.45, 32), matCapa);
-            alturaActualY += 0.35;
-        } else if (capa.tipo === 'slab') {
-            meshCapa = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.15, 3.6), matCapa);
-            alturaActualY += 0.2;
-        } else if (capa.tipo === 'huevo_frito') {
-            const grupoHuevo = new THREE.Group();
-            grupoHuevo.add(new THREE.Mesh(new THREE.CylinderGeometry(2.4, 2.4, 0.12, 32), new THREE.MeshStandardMaterial({ color: 0xffffff })));
-            const meshYema = new THREE.Mesh(new THREE.SphereGeometry(0.9, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0xffaa00 }));
-            meshYema.scale.set(1, 0.5, 1);
-            meshYema.position.set(0.4, 0.06, -0.3);
-            grupoHuevo.add(meshYema);
-            meshCapa = grupoHuevo;
-            alturaActualY += 0.2;
-        } else {
-            meshCapa = new THREE.Mesh(new THREE.CylinderGeometry(2.35, 2.35, 0.2, 32), matCapa);
-            alturaActualY += 0.2;
-        }
-
-        meshCapa.position.y = alturaActualY;
-        hamburguesaGrupo.add(meshCapa);
-        alturaActualY += 0.2;
-    });
-
-    const panSupMesh = crearPanBeigeOscuroConPuntitos(true);
-    panSupMesh.position.y = alturaActualY + 0.1;
-    hamburguesaGrupo.add(panSupMesh);
-}
-
-function enviarCreacion3DAlCarrito() {
-    if (capasActuales.length === 0) {
-        alert("Arma tu hamburguesa 3D agregando al menos un ingrediente.");
-        return;
-    }
-    const nombres = capasActuales.map(i => i.nombre).join(', ');
-    
-    // Guardamos los IDs reales y la estructura para que la RPC los procese en el backend
-    carrito.push({
-        titulo: `🍔 Burger 3D Real (${nombres})`,
-        precio: window.precioFinal3D || 1.00,
-        imagen_url: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=600",
-        idsIngredientes: capasActuales.map(c => c.id) // Guardamos los UUIDs exactos
-    });
-    
-    document.getElementById('contador-carrito-badge').innerText = carrito.length;
-    alert("¡Hamburguesa 3D agregada con éxito al carrito!");
-    capasActuales = [];
-    cambiarPantalla('vitrina');
-}
-
-function renderizarCarrito() {
-    const cont = document.getElementById('lista-items-carrito');
-    const contAbajo = document.getElementById('cantidad-items-abajo');
-    if(!cont) return;
-    cont.innerHTML = "";
-    let total = 0;
-    if(contAbajo) contAbajo.innerText = carrito.length;
-
-    if(carrito.length === 0) {
-        cont.innerHTML = `<div class="p-8 text-center text-stone-500 font-mono text-xs">Tu bolsa está vacía.</div>`;
-        document.getElementById('carrito-monto-total').innerText = "$0.00";
-        if(document.getElementById('carrito-subtotal-monto-abajo')) document.getElementById('carrito-subtotal-monto-abajo').innerText = "$0.00";
-        return;
-    }
-
-    carrito.forEach((item, idx) => {
-        total += item.precio;
-        cont.innerHTML += `
-            <div class="flex justify-between items-center py-4 first:pt-2 last:pb-2">
-                <div class="flex items-center gap-3">
-                    <img src="${item.imagen_url}" class="w-12 h-12 object-cover rounded-xl border border-stone-800">
-                    <div>
-                        <h4 class="text-xs font-bold text-white font-futurista uppercase">${item.titulo}</h4>
-                        <button onclick="carrito.splice(${idx},1);renderizarCarrito();document.getElementById('contador-carrito-badge').innerText=carrito.length;" class="text-[10px] text-red-400 hover:underline cursor-pointer">Eliminar</button>
-                    </div>
-                </div>
-                <span class="font-mono text-amber-400 font-bold">$${item.precio.toFixed(2)}</span>
-            </div>`;
-    });
-    document.getElementById('carrito-monto-total').innerText = `$${total.toFixed(2)}`;
-    if(document.getElementById('carrito-subtotal-monto-abajo')) document.getElementById('carrito-subtotal-monto-abajo').innerText = `$${total.toFixed(2)}`;
-}
-
-async function cargarCuentasPago() {
-    const sel = document.getElementById('select-metodo-pago');
-    if(!sel) return;
-    const { data } = await supabaseClient.from('cuentas_pago').select('*');
-    if(data) {
-        cuentasDB = data;
-        sel.innerHTML = "<option value=''>-- Seleccionar Método --</option>";
-        data.forEach((c, i) => {
-            const plataformaStr = c.plataforma ? c.plataforma.toUpperCase() : 'MÉTODO';
-            const bancoStr = c.banco ? ` - ${c.banco}` : '';
-            sel.innerHTML += `<option value="${i}">[${plataformaStr}]${bancoStr}</option>`;
-        });
-    }
-}
-
-function mostrarDetallesBanco() {
-    const idx = document.getElementById('select-metodo-pago').value;
-    const caja = document.getElementById('caja-banco-detalle');
-    if(!caja) return;
-    if(idx === "" || !cuentasDB[idx]) { caja.classList.add('hidden'); return; }
-    const c = cuentasDB[idx];
-    caja.classList.remove('hidden');
-    caja.innerHTML = `
-        <div><b>Banco:</b> ${c.banco || 'N/A'}</div>
-        <div><b>Titular:</b> ${c.titular || 'N/A'}</div>
-        <div><b>CI/RIF:</b> ${c.ci || 'N/A'}</div>
-        <div><b>Teléfono:</b> ${c.telefono || 'N/A'}</div>
-        ${c.detalles ? `<div class="italic text-stone-400 mt-1">${c.detalles}</div>` : ''}
-    `;
-}
-
-window.addEventListener('DOMContentLoaded', () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const codigoReferido = urlParams.get('ref');
-
-    if (codigoReferido) {
-        localStorage.setItem('dunig_ref_code', codigoReferido);
-    }
-
-    const refGuardado = localStorage.getItem('dunig_ref_code');
-    if (refGuardado) {
-        const badge = document.getElementById('badge-referido');
-        const textRef = document.getElementById('text-codigo-ref');
-        const displayRef = document.getElementById('display-codigo-referido');
-        const contenedorRef = document.getElementById('contenedor-ref-info');
-
-        if(badge) { badge.classList.remove('hidden'); badge.classList.add('flex'); }
-        if(textRef) textRef.innerText = refGuardado;
-        if(displayRef) displayRef.innerText = refGuardado;
-        if(contenedorRef) contenedorRef.classList.remove('hidden');
-    }
-
-    descargarCatalogoDeSupabase();
-    descargarAdicionalesDeSupabase();
-    lucide.createIcons();
-});
-
-async function finalizarOrdenWhatsApp() {
+        async function finalizarOrdenWhatsApp() {
             if(carrito.length === 0) { alert("Agrega productos primero."); return; }
             const ref = document.getElementById('input-ref-pago').value.trim();
             const idx = document.getElementById('select-metodo-pago').value;
@@ -805,20 +904,21 @@ async function finalizarOrdenWhatsApp() {
             if(!/^\d{12}$/.test(ref)) { alert("Inserta un número de referencia válido de exactamente 12 dígitos."); return; }
 
             const codigoReferidoCliente = localStorage.getItem('dunig_ref_code') || 'NINGUNO';
-
             const cuenta = cuentasDB[idx];
-            let total = carrito.reduce((a, b) => a + b.precio, 0);
+            
+            let subtotalProductos = carrito.reduce((a, b) => a + b.precio, 0);
+            let totalGeneral = subtotalProductos + costoDeliveryKm;
             let lista = carrito.map(i => `• ${i.titulo} ($${i.precio.toFixed(2)})`).join('\n');
 
             let wsNum = "584120000000";
             const { data } = await supabaseClient.from('ajustes_sistema').select('valor').eq('id', 'whatsapp_notificaciones').single();
             if(data && data.valor) wsNum = data.valor.replace(/[^0-9]/g, "");
 
-            const mensaje = `🍔 *PEDIDO VIP - EL CACHAPÓN* 🍔\n\n${lista}\n\n💵 *TOTAL:* $${total.toFixed(2)}\n🏦 *PAGO:* ${cuenta.plataforma} (${cuenta.banco})\n🔢 *REF:* ${ref}\n🎁 *REF. CLIENTE:* ${codigoReferidoCliente}`;
+            const mensaje = `🍔 *PEDIDO VIP - CASA DE LAS PAPAS* 🍔\n\n${lista}\n\n📦 *Subtotal:* $${subtotalProductos.toFixed(2)}\n🛵 *Delivery (${distanciaCalculadaKm.toFixed(2)} km):* $${costoDeliveryKm.toFixed(2)}\n💵 *TOTAL A PAGAR:* $${totalGeneral.toFixed(2)}\n🏦 *PAGO:* ${cuenta.plataforma} (${cuenta.banco})\n🔢 *REF:* ${ref}\n🎁 *REF. CLIENTE:* ${codigoReferidoCliente}`;
 
             await supabaseClient.from('ordenes_vip').insert([{
                 productos: carrito.map(i => i.titulo).join(', '),
-                total: total,
+                total: totalGeneral,
                 referencia: ref,
                 estado: "Pendiente",
                 codigo_referido: codigoReferidoCliente
@@ -831,12 +931,6 @@ async function finalizarOrdenWhatsApp() {
             cambiarPantalla('vitrina');
             window.open(`https://api.whatsapp.com/send?phone=${wsNum}&text=${encodeURIComponent(mensaje)}`, '_blank');
         }
-
-        window.addEventListener('DOMContentLoaded', () => {
-            descargarCatalogoDeSupabase();
-            descargarAdicionalesDeSupabase();
-            lucide.createIcons();
-        });
     </script>
 </body>
 </html>
