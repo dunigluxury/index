@@ -24,6 +24,7 @@
             background: linear-gradient(135deg, #f5d77f 0%, #dfb347 50%, #c79524 100%);
             box-shadow: 0 4px 20px rgba(223, 179, 71, 0.4), inset 0 2px 3px rgba(255, 255, 255, 0.6);
             transition: all 0.3s ease;
+            z-index: 9999; /* Asegurado para que no se oculte */
         }
         .btn-oro-flotante:hover {
             transform: scale(1.08);
@@ -35,6 +36,27 @@
     </style>
 </head>
 <body class="text-stone-200 antialiased min-h-screen flex flex-col justify-between grid-bg relative">
+
+    <!-- CAPA DE BLOQUEO TOTAL DE PANTALLA SI ESTÁ CERRADO -->
+    <div id="pantalla-bloqueo-cerrado" class="hidden fixed inset-0 z-[99999] bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center">
+        <div class="border border-red-500/40 bg-stone-950 p-8 rounded-3xl max-w-lg shadow-[0_0_50px_rgba(239,68,68,0.2)] space-y-4">
+            <div class="w-16 h-16 bg-red-500/20 text-red-500 rounded-2xl flex items-center justify-center mx-auto border border-red-500/30">
+                <i data-lucide="lock" class="w-8 h-8"></i>
+            </div>
+            <h2 class="text-2xl font-black font-futurista text-white uppercase tracking-widest">¡ESTAMOS CERRADOS!</h2>
+            <p class="text-xs text-stone-400 leading-relaxed font-sans">En este momento nuestro establecimiento se encuentra cerrado al público. No se pueden procesar pedidos ni interactuar con la plataforma hasta nuestro próximo horario de apertura.</p>
+            <div class="pt-2">
+                <span class="inline-block bg-red-500/10 text-red-400 font-futurista font-bold text-[10px] uppercase tracking-widest px-4 py-2 rounded-xl border border-red-500/20">
+                    🕒 Vuelve pronto o contáctanos por WhatsApp
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- BANNER DE AVISO SUPERIOR DE CIERRE -->
+    <div id="banner-aviso-cerrado" class="hidden bg-red-600 text-black font-futurista font-black text-center text-[10px] sm:text-xs py-2 px-4 uppercase tracking-widest sticky top-0 z-[60] shadow-md flex items-center justify-center gap-2">
+        <i data-lucide="alert-triangle" class="w-4 h-4"></i> ATENCIÓN: EL LOCAL SE ENCUENTRA CERRADO TEMPORALMENTE.
+    </div>
 
     <header class="bg-black/80 backdrop-blur-xl border-b border-stone-900 sticky top-0 z-50 px-4">
         <div class="max-w-7xl mx-auto h-20 flex items-center justify-between">
@@ -314,6 +336,11 @@
     <footer class="border-t border-stone-950 bg-black/80 p-4 text-center text-[10px] text-stone-600 font-mono tracking-widest mt-12">© 2026 Casa de las papas & D'UNIG LUXURY ECOSISTEMA. TODOS LOS DERECHOS RESERVADOS.</footer>
 
     <script>
+        // ==========================================
+        // INTERRUPTOR DE ESTADO DE TIENDA (CAMBIAR A true PARA BLOQUEAR)
+        // ==========================================
+        const ESTADO_TIENDA_CERRADA = false; // Pon en 'true' para bloquear automáticamente la pantalla y mostrar los avisos de cerrado.
+
         const SUPABASE_URL = "https://vcymfspywjabnbddbruh.supabase.co"; 
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZjeW1mc3B5d2phYm5iZGRicnVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ2Njg1MjIsImV4cCI6MjEwMDI0NDUyMn0.bXamCrThn-oGgK_6Ol2w3cSoxUd0pJDHW0_UkPqGEuA"; 
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -339,6 +366,21 @@
         const LOCAL_LNG = -71.1418;
         let TARIFA_POR_KM = 0.80; 
 
+        // Función para aplicar el estado de tienda cerrada de inmediato al cargar
+        function verificarEstadoTienda() {
+            const pantallaBloqueo = document.getElementById('pantalla-bloqueo-cerrado');
+            const bannerAviso = document.getElementById('banner-aviso-cerrado');
+
+            if (ESTADO_TIENDA_CERRADA) {
+                if(pantallaBloqueo) pantallaBloqueo.classList.remove('hidden');
+                if(bannerAviso) bannerAviso.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            } else {
+                if(pantallaBloqueo) pantallaBloqueo.classList.add('hidden');
+                if(bannerAviso) bannerAviso.classList.add('hidden');
+            }
+        }
+
         async function cargarTarifaDeliveryDesdeSupabase() {
             const { data, error } = await supabaseClient
                 .from('tarifa_delivery')
@@ -353,6 +395,8 @@
         }
 
         async function cambiarPantalla(nombre) {
+            if (ESTADO_TIENDA_CERRADA) return; // Si está cerrado, no permite navegar entre pantallas
+
             ['vitrina', 'detalle', 'simulador3d', 'carrito'].forEach(v => {
                 const el = document.getElementById(`vista-${v}`);
                 if(el) el.classList.add('hidden');
@@ -453,6 +497,7 @@
         }
 
         function verDetalleDeProducto(idProducto) {
+            if (ESTADO_TIENDA_CERRADA) return;
             productoSeleccionado = baseProductos.find(p => p.id === idProducto); 
             if (!productoSeleccionado) return;
 
@@ -482,6 +527,7 @@
         }
 
         function cambiarPantallaDetalleDirecto() {
+            if (ESTADO_TIENDA_CERRADA) return;
             ['vitrina', 'simulador3d', 'carrito'].forEach(v => {
                 const el = document.getElementById(`vista-${v}`);
                 if(el) el.classList.add('hidden');
@@ -507,7 +553,7 @@
 
         function cerrarAmplificacion() {
             document.getElementById('modal-lightbox').classList.add('hidden');
-            document.body.style.overflow = 'auto';
+            if (!ESTADO_TIENDA_CERRADA) document.body.style.overflow = 'auto';
         }
 
         async function descargarAdicionalesDeSupabase() {
@@ -544,7 +590,7 @@
         }
 
         function agregarDetalleAlCarritoYVolver() {
-            if (!productoSeleccionado) return;
+            if (ESTADO_TIENDA_CERRADA || !productoSeleccionado) return;
 
             const checkboxes = document.querySelectorAll('.check-adicional:checked');
             let adicionalesSeleccionados = [];
@@ -654,6 +700,7 @@
                 zonaDrop.ondragover = (e) => e.preventDefault();
                 zonaDrop.ondrop = (e) => {
                     e.preventDefault();
+                    if (ESTADO_TIENDA_CERRADA) return;
                     const idIngrediente = e.dataTransfer.getData('text/plain');
                     if(idIngrediente) agregarCapa(idIngrediente);
                 };
@@ -661,6 +708,7 @@
         }
 
         function agregarCapa(id) {
+            if (ESTADO_TIENDA_CERRADA) return;
             const ing = catalogoIngredientes3D.find(i => i.id == id);
             if(ing) {
                 capasActuales.push({ ...ing, uuid: Math.random().toString(36).substring(2, 9) });
@@ -787,6 +835,7 @@
         }
 
         function enviarCreacion3DAlCarrito() {
+            if (ESTADO_TIENDA_CERRADA) return;
             if (capasActuales.length === 0) {
                 alert("Arma tu hamburguesa 3D agregando al menos un ingrediente.");
                 return;
@@ -954,7 +1003,6 @@
             }
         }
 
-        // --- NUEVA LÓGICA DE GESTIÓN DE PAGOS ---
         function gestionarCamposPagoCart() {
             const metodo = document.getElementById('tipoMetodoPago').value;
             const contenedorRef = document.getElementById('contenedorReferenciaCart');
@@ -973,6 +1021,8 @@
         }
 
         window.addEventListener('DOMContentLoaded', () => {
+            verificarEstadoTienda(); // Ejecuta la verificación de tienda cerrada
+
             const urlParams = new URLSearchParams(window.location.search);
             const codigoReferido = urlParams.get('ref');
 
@@ -994,6 +1044,7 @@
         });
 
         async function finalizarOrdenWhatsApp() {
+            if (ESTADO_TIENDA_CERRADA) return;
             if(carrito.length === 0) { alert("Agrega productos primero."); return; }
             
             if(gpsClienteLat === null || gpsClienteLng === null) {
